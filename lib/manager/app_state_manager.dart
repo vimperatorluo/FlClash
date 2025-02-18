@@ -45,8 +45,8 @@ class _AppStateManagerState extends State<AppStateManager>
   }
 
   _cacheStateChange(Widget child) {
-    return Selector2<Config, ClashConfig, String>(
-      selector: (_, config, clashConfig) => "$clashConfig $config",
+    return Selector<Config, String>(
+      selector: (_, config) => "$config",
       shouldRebuild: (prev, next) {
         if (prev != next) {
           globalState.appController.savePreferencesDebounce();
@@ -74,9 +74,12 @@ class _AppStateManagerState extends State<AppStateManager>
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    final isPaused = state == AppLifecycleState.paused;
-    if (isPaused) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       globalState.appController.savePreferencesDebounce();
+      render?.pause();
+    } else {
+      render?.resume();
     }
   }
 
@@ -88,9 +91,14 @@ class _AppStateManagerState extends State<AppStateManager>
 
   @override
   Widget build(BuildContext context) {
-    return _cacheStateChange(
-      _updateNavigationsContainer(
-        widget.child,
+    return Listener(
+      onPointerHover: (_) {
+        render?.resume();
+      },
+      child: _cacheStateChange(
+        _updateNavigationsContainer(
+          widget.child,
+        ),
       ),
     );
   }

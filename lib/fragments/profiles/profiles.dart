@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/fragments/profiles/custom_profile.dart';
 import 'package:fl_clash/fragments/profiles/edit_profile.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
@@ -10,14 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'add_profile.dart';
-
-enum PopupMenuItemEnum { delete, edit }
-
-enum ProfileActions {
-  edit,
-  update,
-  delete,
-}
 
 class ProfilesFragment extends StatefulWidget {
   const ProfilesFragment({super.key});
@@ -52,9 +45,6 @@ class _ProfilesFragmentState extends State<ProfilesFragment> {
         );
         try {
           await appController.updateProfile(profile);
-          if (profile.id == appController.config.currentProfile?.id) {
-            appController.applyProfileDebounce();
-          }
         } catch (e) {
           messages.add("${profile.label ?? profile.id}: $e \n");
           config.setProfile(
@@ -84,8 +74,7 @@ class _ProfilesFragmentState extends State<ProfilesFragment> {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {
         if (!mounted) return;
-        final commonScaffoldState =
-            context.findAncestorStateOfType<CommonScaffoldState>();
+        final commonScaffoldState = context.commonScaffoldState;
         commonScaffoldState?.actions = [
           IconButton(
             onPressed: () {
@@ -93,16 +82,13 @@ class _ProfilesFragmentState extends State<ProfilesFragment> {
             },
             icon: const Icon(Icons.sync),
           ),
-          const SizedBox(
-            width: 8,
-          ),
           IconButton(
             onPressed: () {
               final profiles = globalState.appController.config.profiles;
               showSheet(
                 title: appLocalizations.profilesSort,
                 context: context,
-                builder: (_) => SizedBox(
+                body: SizedBox(
                   height: 400,
                   child: ReorderableProfiles(profiles: profiles),
                 ),
@@ -191,18 +177,16 @@ class ProfileItem extends StatelessWidget {
   });
 
   _handleDeleteProfile(BuildContext context) async {
-    globalState.showMessage(
+    final res = await globalState.showMessage(
       title: appLocalizations.tip,
       message: TextSpan(
         text: appLocalizations.deleteProfileTip,
       ),
-      onTab: () async {
-        await globalState.appController.deleteProfile(profile.id);
-        if (context.mounted) {
-          Navigator.of(context).pop();
-        }
-      },
     );
+    if (res != true) {
+      return;
+    }
+    await globalState.appController.deleteProfile(profile.id);
   }
 
   _handleUpdateProfile() async {
@@ -213,7 +197,7 @@ class ProfileItem extends StatelessWidget {
     final appController = globalState.appController;
     final config = appController.config;
     if (profile.type == ProfileType.file) return;
-    await globalState.safeRun(() async {
+    await globalState.safeRun(silence: false, () async {
       try {
         config.setProfile(
           profile.copyWith(
@@ -221,9 +205,6 @@ class ProfileItem extends StatelessWidget {
           ),
         );
         await appController.updateProfile(profile);
-        if (profile.id == appController.config.currentProfile?.id) {
-          appController.applyProfileDebounce();
-        }
       } catch (e) {
         config.setProfile(
           profile.copyWith(
@@ -275,8 +256,46 @@ class ProfileItem extends StatelessWidget {
     ];
   }
 
+  // _handleCopyLink(BuildContext context) async {
+  //   await Clipboard.setData(
+  //     ClipboardData(
+  //       text: profile.url,
+  //     ),
+  //   );
+  //   if (context.mounted) {
+  //     context.showNotifier(appLocalizations.copySuccess);
+  //   }
+  // }
+
+  _handleExportFile(BuildContext context) async {
+    final commonScaffoldState = context.commonScaffoldState;
+    final res = await commonScaffoldState?.loadingRun<bool>(
+      () async {
+        final file = await profile.getFile();
+        final value = await picker.saveFile(
+          profile.label ?? profile.id,
+          file.readAsBytesSync(),
+        );
+        if (value == null) return false;
+        return true;
+      },
+      title: appLocalizations.tip,
+    );
+    if (res == true && context.mounted) {
+      context.showNotifier(appLocalizations.exportSuccess);
+    }
+  }
+
+  _handlePushCustomPage(BuildContext context, String id) {
+    BaseNavigator.push(
+      context,
+      CustomProfile(profileId: id,),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final key = GlobalKey<CommonPopupBoxState>();
     return CommonCard(
       isSelected: profile.id == groupValue,
       onPressed: () {
@@ -295,45 +314,69 @@ class ProfileItem extends StatelessWidget {
                     padding: EdgeInsets.all(8),
                     child: CircularProgressIndicator(),
                   )
-                : CommonPopupMenu<ProfileActions>(
-                    items: [
-                      CommonPopupMenuItem(
-                        action: ProfileActions.edit,
-                        label: appLocalizations.edit,
-                        iconData: Icons.edit,
-                      ),
-                      if (profile.type == ProfileType.url)
-                        CommonPopupMenuItem(
-                          action: ProfileActions.update,
-                          label: appLocalizations.update,
-                          iconData: Icons.sync,
+                : CommonPopupBox(
+                    key: key,
+                    popup: CommonPopupMenu(
+                      items: [
+                        ActionItemData(
+                          icon: Icons.edit_outlined,
+                          label: appLocalizations.edit,
+                          onPressed: () {
+                            _handleShowEditExtendPage(context);
+                          },
                         ),
-                      CommonPopupMenuItem(
-                        action: ProfileActions.delete,
-                        label: appLocalizations.delete,
-                        iconData: Icons.delete,
-                      ),
-                    ],
-                    onSelected: (ProfileActions? action) async {
-                      switch (action) {
-                        case ProfileActions.edit:
-                          _handleShowEditExtendPage(context);
-                          break;
-                        case ProfileActions.delete:
-                          _handleDeleteProfile(context);
-                          break;
-                        case ProfileActions.update:
-                          _handleUpdateProfile();
-                          break;
-                        case null:
-                          break;
-                      }
-                    },
+                        if (profile.type == ProfileType.url) ...[
+                          ActionItemData(
+                            icon: Icons.sync_alt_sharp,
+                            label: appLocalizations.sync,
+                            onPressed: () {
+                              _handleUpdateProfile();
+                            },
+                          ),
+                          // ActionItemData(
+                          //   icon: Icons.copy,
+                          //   label: appLocalizations.copyLink,
+                          //   onPressed: () {
+                          //     _handleCopyLink(context);
+                          //   },
+                          // ),
+                        ],
+                        ActionItemData(
+                          icon: Icons.extension_outlined,
+                          label: "自定义",
+                          onPressed: () {
+                            _handlePushCustomPage(context, profile.id);
+                          },
+                        ),
+                        ActionItemData(
+                          icon: Icons.file_copy_outlined,
+                          label: appLocalizations.exportFile,
+                          onPressed: () {
+                            _handleExportFile(context);
+                          },
+                        ),
+                        ActionItemData(
+                          icon: Icons.delete_outlined,
+                          iconSize: 20,
+                          label: appLocalizations.delete,
+                          onPressed: () {
+                            _handleDeleteProfile(context);
+                          },
+                          type: ActionType.danger,
+                        ),
+                      ],
+                    ),
+                    target: IconButton(
+                      onPressed: () {
+                        key.currentState?.pop();
+                      },
+                      icon: Icon(Icons.more_vert),
+                    ),
                   ),
           ),
         ),
         title: Container(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,

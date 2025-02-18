@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -12,8 +11,8 @@ class LogLevelItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, LogLevel>(
-      selector: (_, clashConfig) => clashConfig.logLevel,
+    return Selector<Config, LogLevel>(
+      selector: (_, config) => config.patchClashConfig.logLevel,
       builder: (_, value, __) {
         return ListItem<LogLevel>.options(
           leading: const Icon(Icons.info_outline),
@@ -26,8 +25,10 @@ class LogLevelItem extends StatelessWidget {
               if (value == null) {
                 return;
               }
-              final appController = globalState.appController;
-              appController.clashConfig.logLevel = value;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                logLevel: value,
+              );
             },
             textBuilder: (logLevel) => logLevel.name,
             value: value,
@@ -43,8 +44,8 @@ class UaItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, String?>(
-      selector: (_, clashConfig) => clashConfig.globalRealUa,
+    return Selector<Config, String?>(
+      selector: (_, config) => config.patchClashConfig.globalUa,
       builder: (_, value, __) {
         return ListItem<String?>.options(
           leading: const Icon(Icons.computer_outlined),
@@ -59,10 +60,13 @@ class UaItem extends StatelessWidget {
             ],
             value: value,
             onChanged: (ua) {
-              final appController = globalState.appController;
-              appController.clashConfig.globalRealUa = ua;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                globalUa: ua,
+              );
             },
-            textBuilder: (ua) => ua ?? appLocalizations.defaultText,
+            textBuilder: (ua) =>
+                ua ?? appLocalizations.defaultText,
           ),
         );
       },
@@ -75,8 +79,8 @@ class KeepAliveIntervalItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, int>(
-      selector: (_, config) => config.keepAliveInterval,
+    return Selector<Config, int>(
+      selector: (_, config) => config.patchClashConfig.keepAliveInterval,
       builder: (_, value, __) {
         return ListItem.input(
           leading: const Icon(Icons.timer_outlined),
@@ -94,8 +98,11 @@ class KeepAliveIntervalItem extends StatelessWidget {
                   if (intValue <= 0) {
                     throw "Invalid keepAliveInterval";
                   }
-                  globalState.appController.clashConfig.keepAliveInterval =
-                      intValue;
+
+                  final config = globalState.appController.config;
+                  config.patchClashConfig = config.patchClashConfig.copyWith(
+                    keepAliveInterval: intValue,
+                  );
                 } catch (e) {
                   globalState.showMessage(
                     title: appLocalizations.keepAliveIntervalDesc,
@@ -161,8 +168,8 @@ class MixedPortItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, int>(
-      selector: (_, clashConfig) => clashConfig.mixedPort,
+    return Selector<Config, int>(
+      selector: (_, config) => config.patchClashConfig.mixedPort,
       builder: (_, value, __) {
         return ListItem.input(
           leading: const Icon(Icons.adjust_outlined),
@@ -178,7 +185,10 @@ class MixedPortItem extends StatelessWidget {
                   if (mixedPort < 1024 || mixedPort > 49151) {
                     throw "Invalid port";
                   }
-                  globalState.appController.clashConfig.mixedPort = mixedPort;
+                  final config = globalState.appController.config;
+                  config.patchClashConfig = config.patchClashConfig.copyWith(
+                    mixedPort: mixedPort,
+                  );
                 } catch (e) {
                   globalState.showMessage(
                     title: appLocalizations.proxyPort,
@@ -209,10 +219,10 @@ class HostsItem extends StatelessWidget {
       delegate: OpenDelegate(
         isBlur: false,
         title: "Hosts",
-        widget: Selector<ClashConfig, HostsMap>(
-          selector: (_, clashConfig) => clashConfig.hosts,
+        widget: Selector<Config, HostsMap>(
+          selector: (_, config) => config.patchClashConfig.hosts,
           shouldRebuild: (prev, next) =>
-              !const MapEquality<String, String>().equals(prev, next),
+              !stringAndStringMapEquality.equals(prev, next),
           builder: (_, hosts, ___) {
             final entries = hosts.entries;
             return ListPage(
@@ -220,9 +230,11 @@ class HostsItem extends StatelessWidget {
               items: entries,
               titleBuilder: (item) => Text(item.key),
               subtitleBuilder: (item) => Text(item.value),
-              onChange: (items){
-                final clashConfig = globalState.appController.clashConfig;
-                clashConfig.hosts = Map.fromEntries(items);
+              onChange: (items) {
+                final config = globalState.appController.config;
+                config.patchClashConfig = config.patchClashConfig.copyWith(
+                  hosts: Map.fromEntries(items),
+                );
               },
             );
           },
@@ -238,8 +250,8 @@ class Ipv6Item extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.ipv6,
+    return Selector<Config, bool>(
+      selector: (_, config) => config.patchClashConfig.ipv6,
       builder: (_, ipv6, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.water_outlined),
@@ -248,8 +260,10 @@ class Ipv6Item extends StatelessWidget {
           delegate: SwitchDelegate(
             value: ipv6,
             onChanged: (bool value) async {
-              final appController = globalState.appController;
-              appController.clashConfig.ipv6 = value;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                ipv6: value,
+              );
             },
           ),
         );
@@ -263,8 +277,8 @@ class AllowLanItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.allowLan,
+    return Selector<Config, bool>(
+      selector: (_, config) => config.patchClashConfig.allowLan,
       builder: (_, allowLan, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.device_hub),
@@ -273,8 +287,10 @@ class AllowLanItem extends StatelessWidget {
           delegate: SwitchDelegate(
             value: allowLan,
             onChanged: (bool value) async {
-              final clashConfig = context.read<ClashConfig>();
-              clashConfig.allowLan = value;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                allowLan: value,
+              );
             },
           ),
         );
@@ -288,8 +304,8 @@ class UnifiedDelayItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.unifiedDelay,
+    return Selector<Config, bool>(
+      selector: (_, config) => config.patchClashConfig.unifiedDelay,
       builder: (_, unifiedDelay, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.compress_outlined),
@@ -298,8 +314,10 @@ class UnifiedDelayItem extends StatelessWidget {
           delegate: SwitchDelegate(
             value: unifiedDelay,
             onChanged: (bool value) async {
-              final appController = globalState.appController;
-              appController.clashConfig.unifiedDelay = value;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                unifiedDelay: value,
+              );
             },
           ),
         );
@@ -313,9 +331,9 @@ class FindProcessItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) =>
-          clashConfig.findProcessMode == FindProcessMode.always,
+    return Selector<Config, bool>(
+      selector: (_, config) =>
+          config.patchClashConfig.findProcessMode == FindProcessMode.always,
       builder: (_, findProcess, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.polymer_outlined),
@@ -324,9 +342,11 @@ class FindProcessItem extends StatelessWidget {
           delegate: SwitchDelegate(
             value: findProcess,
             onChanged: (bool value) async {
-              final appController = globalState.appController;
-              appController.clashConfig.findProcessMode =
-                  value ? FindProcessMode.always : FindProcessMode.off;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                findProcessMode:
+                    value ? FindProcessMode.always : FindProcessMode.off,
+              );
             },
           ),
         );
@@ -340,8 +360,8 @@ class TcpConcurrentItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.tcpConcurrent,
+    return Selector<Config, bool>(
+      selector: (_, config) => config.patchClashConfig.tcpConcurrent,
       builder: (_, tcpConcurrent, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.double_arrow_outlined),
@@ -350,8 +370,10 @@ class TcpConcurrentItem extends StatelessWidget {
           delegate: SwitchDelegate(
             value: tcpConcurrent,
             onChanged: (bool value) async {
-              final appController = globalState.appController;
-              appController.clashConfig.tcpConcurrent = value;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                tcpConcurrent: value,
+              );
             },
           ),
         );
@@ -365,20 +387,23 @@ class GeodataLoaderItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) =>
-          clashConfig.geodataLoader == geodataLoaderMemconservative,
-      builder: (_, memconservative, __) {
+    return Selector<Config, bool>(
+      selector: (_, config) =>
+          config.patchClashConfig.geodataLoader == GeodataLoader.memconservative,
+      builder: (_, isMemconservative, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.memory),
           title: Text(appLocalizations.geodataLoader),
           subtitle: Text(appLocalizations.geodataLoaderDesc),
           delegate: SwitchDelegate(
-            value: memconservative,
+            value: isMemconservative,
             onChanged: (bool value) async {
-              final appController = globalState.appController;
-              appController.clashConfig.geodataLoader =
-                  value ? geodataLoaderMemconservative : geodataLoaderStandard;
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                geodataLoader: value
+                    ? GeodataLoader.memconservative
+                    : GeodataLoader.standard,
+              );
             },
           ),
         );
@@ -392,8 +417,10 @@ class ExternalControllerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.externalController.isNotEmpty,
+    return Selector<Config, bool>(
+      selector: (_, config) =>
+          config.patchClashConfig.externalController ==
+          ExternalControllerStatus.open,
       builder: (_, hasExternalController, __) {
         return ListItem.switchItem(
           leading: const Icon(Icons.api_outlined),
@@ -402,9 +429,12 @@ class ExternalControllerItem extends StatelessWidget {
           delegate: SwitchDelegate(
             value: hasExternalController,
             onChanged: (bool value) async {
-              final appController = globalState.appController;
-              appController.clashConfig.externalController =
-                  value ? defaultExternalController : '';
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith(
+                externalController: value
+                    ? ExternalControllerStatus.open
+                    : ExternalControllerStatus.close,
+              );
             },
           ),
         );
@@ -413,10 +443,10 @@ class ExternalControllerItem extends StatelessWidget {
   }
 }
 
-final generalItems = const [
+final generalItems = [
   LogLevelItem(),
   UaItem(),
-  KeepAliveIntervalItem(),
+  if (system.isDesktop) KeepAliveIntervalItem(),
   TestUrlItem(),
   MixedPortItem(),
   HostsItem(),

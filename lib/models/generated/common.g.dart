@@ -29,7 +29,7 @@ _$PackageImpl _$$PackageImplFromJson(Map<String, dynamic> json) =>
       packageName: json['packageName'] as String,
       label: json['label'] as String,
       isSystem: json['isSystem'] as bool,
-      firstInstallTime: (json['firstInstallTime'] as num).toInt(),
+      lastUpdateTime: (json['lastUpdateTime'] as num).toInt(),
     );
 
 Map<String, dynamic> _$$PackageImplToJson(_$PackageImpl instance) =>
@@ -37,7 +37,7 @@ Map<String, dynamic> _$$PackageImplToJson(_$PackageImpl instance) =>
       'packageName': instance.packageName,
       'label': instance.label,
       'isSystem': instance.isSystem,
-      'firstInstallTime': instance.firstInstallTime,
+      'lastUpdateTime': instance.lastUpdateTime,
     };
 
 _$MetadataImpl _$$MetadataImplFromJson(Map<String, dynamic> json) =>
@@ -87,46 +87,6 @@ Map<String, dynamic> _$$ConnectionImplToJson(_$ConnectionImpl instance) =>
       'chains': instance.chains,
     };
 
-_$LogsAndKeywordsImpl _$$LogsAndKeywordsImplFromJson(
-        Map<String, dynamic> json) =>
-    _$LogsAndKeywordsImpl(
-      logs: (json['logs'] as List<dynamic>?)
-              ?.map((e) => Log.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      keywords: (json['keywords'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-    );
-
-Map<String, dynamic> _$$LogsAndKeywordsImplToJson(
-        _$LogsAndKeywordsImpl instance) =>
-    <String, dynamic>{
-      'logs': instance.logs,
-      'keywords': instance.keywords,
-    };
-
-_$ConnectionsAndKeywordsImpl _$$ConnectionsAndKeywordsImplFromJson(
-        Map<String, dynamic> json) =>
-    _$ConnectionsAndKeywordsImpl(
-      connections: (json['connections'] as List<dynamic>?)
-              ?.map((e) => Connection.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      keywords: (json['keywords'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-    );
-
-Map<String, dynamic> _$$ConnectionsAndKeywordsImplToJson(
-        _$ConnectionsAndKeywordsImpl instance) =>
-    <String, dynamic>{
-      'connections': instance.connections,
-      'keywords': instance.keywords,
-    };
-
 _$DAVImpl _$$DAVImplFromJson(Map<String, dynamic> json) => _$DAVImpl(
       uri: json['uri'] as String,
       user: json['user'] as String,
@@ -153,36 +113,6 @@ Map<String, dynamic> _$$VersionInfoImplToJson(_$VersionInfoImpl instance) =>
       'version': instance.version,
     };
 
-_$GroupImpl _$$GroupImplFromJson(Map<String, dynamic> json) => _$GroupImpl(
-      type: $enumDecode(_$GroupTypeEnumMap, json['type']),
-      all: (json['all'] as List<dynamic>?)
-              ?.map((e) => Proxy.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
-      now: json['now'] as String?,
-      hidden: json['hidden'] as bool?,
-      icon: json['icon'] as String? ?? "",
-      name: json['name'] as String,
-    );
-
-Map<String, dynamic> _$$GroupImplToJson(_$GroupImpl instance) =>
-    <String, dynamic>{
-      'type': _$GroupTypeEnumMap[instance.type]!,
-      'all': instance.all,
-      'now': instance.now,
-      'hidden': instance.hidden,
-      'icon': instance.icon,
-      'name': instance.name,
-    };
-
-const _$GroupTypeEnumMap = {
-  GroupType.Selector: 'Selector',
-  GroupType.URLTest: 'URLTest',
-  GroupType.Fallback: 'Fallback',
-  GroupType.LoadBalance: 'LoadBalance',
-  GroupType.Relay: 'Relay',
-};
-
 _$ProxyImpl _$$ProxyImplFromJson(Map<String, dynamic> json) => _$ProxyImpl(
       name: json['name'] as String,
       type: json['type'] as String,
@@ -195,6 +125,38 @@ Map<String, dynamic> _$$ProxyImplToJson(_$ProxyImpl instance) =>
       'type': instance.type,
       'now': instance.now,
     };
+
+_$GroupImpl _$$GroupImplFromJson(Map<String, dynamic> json) => _$GroupImpl(
+      type: $enumDecode(_$GroupTypeEnumMap, json['type']),
+      all: (json['all'] as List<dynamic>?)
+              ?.map((e) => Proxy.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      now: json['now'] as String?,
+      hidden: json['hidden'] as bool?,
+      testUrl: json['testUrl'] as String?,
+      icon: json['icon'] as String? ?? "",
+      name: json['name'] as String,
+    );
+
+Map<String, dynamic> _$$GroupImplToJson(_$GroupImpl instance) =>
+    <String, dynamic>{
+      'type': _$GroupTypeEnumMap[instance.type]!,
+      'all': instance.all,
+      'now': instance.now,
+      'hidden': instance.hidden,
+      'testUrl': instance.testUrl,
+      'icon': instance.icon,
+      'name': instance.name,
+    };
+
+const _$GroupTypeEnumMap = {
+  GroupType.Selector: 'Selector',
+  GroupType.URLTest: 'URLTest',
+  GroupType.Fallback: 'Fallback',
+  GroupType.LoadBalance: 'LoadBalance',
+  GroupType.Relay: 'Relay',
+};
 
 _$HotKeyActionImpl _$$HotKeyActionImplFromJson(Map<String, dynamic> json) =>
     _$HotKeyActionImpl(

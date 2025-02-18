@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
+
+import 'print.dart';
 
 extension StringExtension on String {
   bool get isUrl {
@@ -43,7 +44,7 @@ extension StringExtension on String {
       RegExp(this);
       return true;
     } catch (e) {
-      debugPrint(e.toString());
+      commonPrint.log(e.toString());
       return false;
     }
   }

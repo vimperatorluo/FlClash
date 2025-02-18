@@ -11,31 +11,33 @@ class ProxyCard extends StatelessWidget {
   final String groupName;
   final Proxy proxy;
   final GroupType groupType;
-  final CommonCardType style;
   final ProxyCardType type;
+  final String? testUrl;
 
   const ProxyCard({
     super.key,
     required this.groupName,
+    required this.testUrl,
     required this.proxy,
     required this.groupType,
-    this.style = CommonCardType.plain,
     required this.type,
   });
 
   Measure get measure => globalState.measure;
 
   _handleTestCurrentDelay() {
-    proxyDelayTest(proxy);
+    proxyDelayTest(
+      proxy,
+      testUrl,
+    );
   }
 
   Widget _buildDelayText() {
     return SizedBox(
       height: measure.labelSmallHeight,
       child: Selector<AppState, int?>(
-        selector: (context, appState) => appState.getDelay(
-          proxy.name,
-        ),
+        selector: (context, appState) =>
+            globalState.appController.getDelay(proxy.name,testUrl),
         builder: (context, delay, __) {
           return FadeBox(
             child: Builder(
@@ -115,15 +117,11 @@ class ProxyCard extends StatelessWidget {
         groupName,
         nextProxyName,
       );
-      await appController.changeProxyDebounce([
-        groupName,
-        nextProxyName,
-      ]);
+      await appController.changeProxyDebounce(groupName, nextProxyName);
       return;
     }
-    globalState.showSnackBar(
-      context,
-      message: appLocalizations.notSelectedTip,
+    globalState.showNotifier(
+      appLocalizations.notSelectedTip,
     );
   }
 
@@ -138,7 +136,6 @@ class ProxyCard extends StatelessWidget {
         return Stack(
           children: [
             CommonCard(
-              type: style,
               key: key,
               onPressed: () {
                 _changeProxy(context);
@@ -167,8 +164,8 @@ class ProxyCard extends StatelessWidget {
                               desc,
                               overflow: TextOverflow.ellipsis,
                               style: context.textTheme.bodySmall?.copyWith(
-                                color: context.textTheme.bodySmall?.color
-                                    ?.toLight(),
+                                color:
+                                    context.textTheme.bodySmall?.color?.toLight,
                               ),
                             );
                           },
@@ -192,8 +189,8 @@ class ProxyCard extends StatelessWidget {
                                   proxy.type,
                                   style: context.textTheme.bodySmall?.copyWith(
                                     overflow: TextOverflow.ellipsis,
-                                    color: context.textTheme.bodySmall?.color
-                                        ?.toLight(),
+                                    color: context
+                                        .textTheme.bodySmall?.color?.toLight,
                                   ),
                                 ),
                               ),

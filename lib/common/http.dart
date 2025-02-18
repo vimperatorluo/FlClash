@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
+import 'package:fl_clash/common/common.dart';
 
 import '../state.dart';
-import 'constant.dart';
 
 class FlClashHttpOverrides extends HttpOverrides {
   @override
@@ -14,10 +13,10 @@ class FlClashHttpOverrides extends HttpOverrides {
       if ([localhost].contains(url.host)) {
         return "DIRECT";
       }
-      debugPrint("find $url");
       final appController = globalState.appController;
-      final port = appController.clashConfig.mixedPort;
+      final port = appController.config.patchClashConfig.mixedPort;
       final isStart = appController.appFlowingState.isStart;
+      commonPrint.log("find $url proxy:$isStart");
       if (!isStart) return "DIRECT";
       return "PROXY localhost:$port";
     };

@@ -6,7 +6,7 @@ import 'common.dart';
 import 'core.dart';
 import 'profile.dart';
 
-typedef DelayMap = Map<String, int?>;
+typedef DelayMap = Map<String, Map<String, int?>>;
 
 class AppState with ChangeNotifier {
   List<NavigationItem> _navigationItems;
@@ -20,7 +20,7 @@ class AppState with ChangeNotifier {
   SelectedMap _selectedMap;
   List<Group> _groups;
   double _viewWidth;
-  List<Connection> _requests;
+  final FixedList<Connection> _requests;
   num _checkIpNum;
   List<ExternalProvider> _providers;
   List<Package> _packages;
@@ -31,14 +31,17 @@ class AppState with ChangeNotifier {
     required Mode mode,
     required SelectedMap selectedMap,
     required int version,
-  })  : _navigationItems = [],
+  })
+      : _navigationItems = [],
         _isInit = false,
         _currentLabel = "dashboard",
-        _viewWidth = other.getScreenSize().width,
+        _viewWidth = other
+            .getScreenSize()
+            .width,
         _selectedMap = selectedMap,
         _sortNum = 0,
         _checkIpNum = 0,
-        _requests = [],
+        _requests = FixedList(1000),
         _mode = mode,
         _brightness = null,
         _delayMap = {},
@@ -76,7 +79,7 @@ class AppState with ChangeNotifier {
     return navigationItems
         .where(
           (element) => element.modes.contains(navigationItemMode),
-        )
+    )
         .toList();
   }
 
@@ -106,7 +109,7 @@ class AppState with ChangeNotifier {
     if (index == -1) return proxyName;
     final group = groups[index];
     final currentSelectedName =
-        group.getCurrentSelectedName(selectedMap[proxyName] ?? '');
+    group.getCurrentSelectedName(selectedMap[proxyName] ?? '');
     if (currentSelectedName.isEmpty) return proxyName;
     return getRealProxyName(
       currentSelectedName,
@@ -122,10 +125,6 @@ class AppState with ChangeNotifier {
     return selectedMap[firstGroupName] ?? firstGroup.now;
   }
 
-  int? getDelay(String proxyName) {
-    return _delayMap[getRealProxyName(proxyName)];
-  }
-
   VersionInfo? get versionInfo => _versionInfo;
 
   set versionInfo(VersionInfo? value) {
@@ -135,19 +134,10 @@ class AppState with ChangeNotifier {
     }
   }
 
-  List<Connection> get requests => _requests;
-
-  set requests(List<Connection> value) {
-    if (_requests != value) {
-      _requests = value;
-      notifyListeners();
-    }
-  }
+  List<Connection> get requests => _requests.list;
 
   addRequest(Connection value) {
-    _requests = List.from(_requests)..add(value);
-    const maxLength = 1000;
-    _requests = _requests.safeSublist(_requests.length - maxLength);
+    _requests.add(value);
     notifyListeners();
   }
 
@@ -237,15 +227,20 @@ class AppState with ChangeNotifier {
   }
 
   set delayMap(DelayMap value) {
-    if (!stringAndIntQMapEquality.equals(_delayMap, value)) {
+    if (_delayMap != value) {
       _delayMap = value;
       notifyListeners();
     }
   }
 
   setDelay(Delay delay) {
-    if (_delayMap[delay.name] != delay.value) {
-      _delayMap = Map.from(_delayMap)..[delay.name] = delay.value;
+    if (_delayMap[delay.url]?[delay.name] != delay.value) {
+      final DelayMap newDelayMap = Map.from(_delayMap);
+      if (newDelayMap[delay.url] == null) {
+        newDelayMap[delay.url] = {};
+      }
+      newDelayMap[delay.url]![delay.name] = delay.value;
+      _delayMap = newDelayMap;
       notifyListeners();
     }
   }
@@ -272,13 +267,14 @@ class AppState with ChangeNotifier {
     if (provider == null) return;
     final index = _providers.indexWhere((item) => item.name == provider.name);
     if (index == -1) return;
-    _providers = List.from(_providers)..[index] = provider;
+    _providers = List.from(_providers)
+      ..[index] = provider;
     notifyListeners();
   }
 
   Group? getGroupWithName(String groupName) {
     final index =
-        currentGroups.indexWhere((element) => element.name == groupName);
+    currentGroups.indexWhere((element) => element.name == groupName);
     return index != -1 ? currentGroups[index] : null;
   }
 
@@ -303,12 +299,13 @@ class AppState with ChangeNotifier {
 
 class AppFlowingState with ChangeNotifier {
   int? _runTime;
-  List<Log> _logs;
+  final FixedList<Log> _logs;
   List<Traffic> _traffics;
   Traffic _totalTraffic;
+  String? _localIp;
 
   AppFlowingState()
-      : _logs = [],
+      : _logs = FixedList(1000),
         _traffics = [],
         _totalTraffic = Traffic();
 
@@ -323,19 +320,10 @@ class AppFlowingState with ChangeNotifier {
     }
   }
 
-  List<Log> get logs => _logs;
-
-  set logs(List<Log> value) {
-    if (_logs != value) {
-      _logs = value;
-      notifyListeners();
-    }
-  }
+  List<Log> get logs => _logs.list;
 
   addLog(Log log) {
-    _logs = List.from(_logs)..add(log);
-    const maxLength = 1000;
-    _logs = _logs.safeSublist(_logs.length - maxLength);
+    _logs.add(log);
     notifyListeners();
   }
 
@@ -349,8 +337,9 @@ class AppFlowingState with ChangeNotifier {
   }
 
   addTraffic(Traffic traffic) {
-    _traffics = List.from(_traffics)..add(traffic);
-    const maxLength = 60;
+    _traffics = List.from(_traffics)
+      ..add(traffic);
+    const maxLength = 30;
     _traffics = _traffics.safeSublist(_traffics.length - maxLength);
     notifyListeners();
   }
@@ -360,6 +349,15 @@ class AppFlowingState with ChangeNotifier {
   set totalTraffic(Traffic value) {
     if (_totalTraffic != value) {
       _totalTraffic = value;
+      notifyListeners();
+    }
+  }
+
+  String? get localIp => _localIp;
+
+  set localIp(String? value) {
+    if (_localIp != value) {
+      _localIp = value;
       notifyListeners();
     }
   }

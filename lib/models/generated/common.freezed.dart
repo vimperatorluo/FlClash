@@ -290,7 +290,7 @@ mixin _$Package {
   String get packageName => throw _privateConstructorUsedError;
   String get label => throw _privateConstructorUsedError;
   bool get isSystem => throw _privateConstructorUsedError;
-  int get firstInstallTime => throw _privateConstructorUsedError;
+  int get lastUpdateTime => throw _privateConstructorUsedError;
 
   /// Serializes this Package to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -307,7 +307,7 @@ abstract class $PackageCopyWith<$Res> {
       _$PackageCopyWithImpl<$Res, Package>;
   @useResult
   $Res call(
-      {String packageName, String label, bool isSystem, int firstInstallTime});
+      {String packageName, String label, bool isSystem, int lastUpdateTime});
 }
 
 /// @nodoc
@@ -328,7 +328,7 @@ class _$PackageCopyWithImpl<$Res, $Val extends Package>
     Object? packageName = null,
     Object? label = null,
     Object? isSystem = null,
-    Object? firstInstallTime = null,
+    Object? lastUpdateTime = null,
   }) {
     return _then(_value.copyWith(
       packageName: null == packageName
@@ -343,9 +343,9 @@ class _$PackageCopyWithImpl<$Res, $Val extends Package>
           ? _value.isSystem
           : isSystem // ignore: cast_nullable_to_non_nullable
               as bool,
-      firstInstallTime: null == firstInstallTime
-          ? _value.firstInstallTime
-          : firstInstallTime // ignore: cast_nullable_to_non_nullable
+      lastUpdateTime: null == lastUpdateTime
+          ? _value.lastUpdateTime
+          : lastUpdateTime // ignore: cast_nullable_to_non_nullable
               as int,
     ) as $Val);
   }
@@ -359,7 +359,7 @@ abstract class _$$PackageImplCopyWith<$Res> implements $PackageCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {String packageName, String label, bool isSystem, int firstInstallTime});
+      {String packageName, String label, bool isSystem, int lastUpdateTime});
 }
 
 /// @nodoc
@@ -378,7 +378,7 @@ class __$$PackageImplCopyWithImpl<$Res>
     Object? packageName = null,
     Object? label = null,
     Object? isSystem = null,
-    Object? firstInstallTime = null,
+    Object? lastUpdateTime = null,
   }) {
     return _then(_$PackageImpl(
       packageName: null == packageName
@@ -393,9 +393,9 @@ class __$$PackageImplCopyWithImpl<$Res>
           ? _value.isSystem
           : isSystem // ignore: cast_nullable_to_non_nullable
               as bool,
-      firstInstallTime: null == firstInstallTime
-          ? _value.firstInstallTime
-          : firstInstallTime // ignore: cast_nullable_to_non_nullable
+      lastUpdateTime: null == lastUpdateTime
+          ? _value.lastUpdateTime
+          : lastUpdateTime // ignore: cast_nullable_to_non_nullable
               as int,
     ));
   }
@@ -408,7 +408,7 @@ class _$PackageImpl implements _Package {
       {required this.packageName,
       required this.label,
       required this.isSystem,
-      required this.firstInstallTime});
+      required this.lastUpdateTime});
 
   factory _$PackageImpl.fromJson(Map<String, dynamic> json) =>
       _$$PackageImplFromJson(json);
@@ -420,11 +420,11 @@ class _$PackageImpl implements _Package {
   @override
   final bool isSystem;
   @override
-  final int firstInstallTime;
+  final int lastUpdateTime;
 
   @override
   String toString() {
-    return 'Package(packageName: $packageName, label: $label, isSystem: $isSystem, firstInstallTime: $firstInstallTime)';
+    return 'Package(packageName: $packageName, label: $label, isSystem: $isSystem, lastUpdateTime: $lastUpdateTime)';
   }
 
   @override
@@ -437,14 +437,14 @@ class _$PackageImpl implements _Package {
             (identical(other.label, label) || other.label == label) &&
             (identical(other.isSystem, isSystem) ||
                 other.isSystem == isSystem) &&
-            (identical(other.firstInstallTime, firstInstallTime) ||
-                other.firstInstallTime == firstInstallTime));
+            (identical(other.lastUpdateTime, lastUpdateTime) ||
+                other.lastUpdateTime == lastUpdateTime));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, packageName, label, isSystem, firstInstallTime);
+      Object.hash(runtimeType, packageName, label, isSystem, lastUpdateTime);
 
   /// Create a copy of Package
   /// with the given fields replaced by the non-null parameter values.
@@ -467,7 +467,7 @@ abstract class _Package implements Package {
       {required final String packageName,
       required final String label,
       required final bool isSystem,
-      required final int firstInstallTime}) = _$PackageImpl;
+      required final int lastUpdateTime}) = _$PackageImpl;
 
   factory _Package.fromJson(Map<String, dynamic> json) = _$PackageImpl.fromJson;
 
@@ -478,7 +478,7 @@ abstract class _Package implements Package {
   @override
   bool get isSystem;
   @override
-  int get firstInstallTime;
+  int get lastUpdateTime;
 
   /// Create a copy of Package
   /// with the given fields replaced by the non-null parameter values.
@@ -1092,51 +1092,45 @@ abstract class _Connection implements Connection {
       throw _privateConstructorUsedError;
 }
 
-LogsAndKeywords _$LogsAndKeywordsFromJson(Map<String, dynamic> json) {
-  return _LogsAndKeywords.fromJson(json);
-}
-
 /// @nodoc
-mixin _$LogsAndKeywords {
+mixin _$LogsState {
   List<Log> get logs => throw _privateConstructorUsedError;
   List<String> get keywords => throw _privateConstructorUsedError;
+  String get query => throw _privateConstructorUsedError;
 
-  /// Serializes this LogsAndKeywords to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of LogsAndKeywords
+  /// Create a copy of LogsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $LogsAndKeywordsCopyWith<LogsAndKeywords> get copyWith =>
+  $LogsStateCopyWith<LogsState> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $LogsAndKeywordsCopyWith<$Res> {
-  factory $LogsAndKeywordsCopyWith(
-          LogsAndKeywords value, $Res Function(LogsAndKeywords) then) =
-      _$LogsAndKeywordsCopyWithImpl<$Res, LogsAndKeywords>;
+abstract class $LogsStateCopyWith<$Res> {
+  factory $LogsStateCopyWith(LogsState value, $Res Function(LogsState) then) =
+      _$LogsStateCopyWithImpl<$Res, LogsState>;
   @useResult
-  $Res call({List<Log> logs, List<String> keywords});
+  $Res call({List<Log> logs, List<String> keywords, String query});
 }
 
 /// @nodoc
-class _$LogsAndKeywordsCopyWithImpl<$Res, $Val extends LogsAndKeywords>
-    implements $LogsAndKeywordsCopyWith<$Res> {
-  _$LogsAndKeywordsCopyWithImpl(this._value, this._then);
+class _$LogsStateCopyWithImpl<$Res, $Val extends LogsState>
+    implements $LogsStateCopyWith<$Res> {
+  _$LogsStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of LogsAndKeywords
+  /// Create a copy of LogsState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? logs = null,
     Object? keywords = null,
+    Object? query = null,
   }) {
     return _then(_value.copyWith(
       logs: null == logs
@@ -1147,38 +1141,43 @@ class _$LogsAndKeywordsCopyWithImpl<$Res, $Val extends LogsAndKeywords>
           ? _value.keywords
           : keywords // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      query: null == query
+          ? _value.query
+          : query // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$LogsAndKeywordsImplCopyWith<$Res>
-    implements $LogsAndKeywordsCopyWith<$Res> {
-  factory _$$LogsAndKeywordsImplCopyWith(_$LogsAndKeywordsImpl value,
-          $Res Function(_$LogsAndKeywordsImpl) then) =
-      __$$LogsAndKeywordsImplCopyWithImpl<$Res>;
+abstract class _$$LogsStateImplCopyWith<$Res>
+    implements $LogsStateCopyWith<$Res> {
+  factory _$$LogsStateImplCopyWith(
+          _$LogsStateImpl value, $Res Function(_$LogsStateImpl) then) =
+      __$$LogsStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<Log> logs, List<String> keywords});
+  $Res call({List<Log> logs, List<String> keywords, String query});
 }
 
 /// @nodoc
-class __$$LogsAndKeywordsImplCopyWithImpl<$Res>
-    extends _$LogsAndKeywordsCopyWithImpl<$Res, _$LogsAndKeywordsImpl>
-    implements _$$LogsAndKeywordsImplCopyWith<$Res> {
-  __$$LogsAndKeywordsImplCopyWithImpl(
-      _$LogsAndKeywordsImpl _value, $Res Function(_$LogsAndKeywordsImpl) _then)
+class __$$LogsStateImplCopyWithImpl<$Res>
+    extends _$LogsStateCopyWithImpl<$Res, _$LogsStateImpl>
+    implements _$$LogsStateImplCopyWith<$Res> {
+  __$$LogsStateImplCopyWithImpl(
+      _$LogsStateImpl _value, $Res Function(_$LogsStateImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of LogsAndKeywords
+  /// Create a copy of LogsState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? logs = null,
     Object? keywords = null,
+    Object? query = null,
   }) {
-    return _then(_$LogsAndKeywordsImpl(
+    return _then(_$LogsStateImpl(
       logs: null == logs
           ? _value._logs
           : logs // ignore: cast_nullable_to_non_nullable
@@ -1187,20 +1186,23 @@ class __$$LogsAndKeywordsImplCopyWithImpl<$Res>
           ? _value._keywords
           : keywords // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      query: null == query
+          ? _value.query
+          : query // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
 
 /// @nodoc
-@JsonSerializable()
-class _$LogsAndKeywordsImpl implements _LogsAndKeywords {
-  const _$LogsAndKeywordsImpl(
-      {final List<Log> logs = const [], final List<String> keywords = const []})
+
+class _$LogsStateImpl implements _LogsState {
+  const _$LogsStateImpl(
+      {final List<Log> logs = const [],
+      final List<String> keywords = const [],
+      this.query = ""})
       : _logs = logs,
         _keywords = keywords;
-
-  factory _$LogsAndKeywordsImpl.fromJson(Map<String, dynamic> json) =>
-      _$$LogsAndKeywordsImplFromJson(json);
 
   final List<Log> _logs;
   @override
@@ -1221,111 +1223,102 @@ class _$LogsAndKeywordsImpl implements _LogsAndKeywords {
   }
 
   @override
+  @JsonKey()
+  final String query;
+
+  @override
   String toString() {
-    return 'LogsAndKeywords(logs: $logs, keywords: $keywords)';
+    return 'LogsState(logs: $logs, keywords: $keywords, query: $query)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$LogsAndKeywordsImpl &&
+            other is _$LogsStateImpl &&
             const DeepCollectionEquality().equals(other._logs, _logs) &&
-            const DeepCollectionEquality().equals(other._keywords, _keywords));
+            const DeepCollectionEquality().equals(other._keywords, _keywords) &&
+            (identical(other.query, query) || other.query == query));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(_logs),
-      const DeepCollectionEquality().hash(_keywords));
+      const DeepCollectionEquality().hash(_keywords),
+      query);
 
-  /// Create a copy of LogsAndKeywords
+  /// Create a copy of LogsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$LogsAndKeywordsImplCopyWith<_$LogsAndKeywordsImpl> get copyWith =>
-      __$$LogsAndKeywordsImplCopyWithImpl<_$LogsAndKeywordsImpl>(
-          this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$LogsAndKeywordsImplToJson(
-      this,
-    );
-  }
+  _$$LogsStateImplCopyWith<_$LogsStateImpl> get copyWith =>
+      __$$LogsStateImplCopyWithImpl<_$LogsStateImpl>(this, _$identity);
 }
 
-abstract class _LogsAndKeywords implements LogsAndKeywords {
-  const factory _LogsAndKeywords(
+abstract class _LogsState implements LogsState {
+  const factory _LogsState(
       {final List<Log> logs,
-      final List<String> keywords}) = _$LogsAndKeywordsImpl;
-
-  factory _LogsAndKeywords.fromJson(Map<String, dynamic> json) =
-      _$LogsAndKeywordsImpl.fromJson;
+      final List<String> keywords,
+      final String query}) = _$LogsStateImpl;
 
   @override
   List<Log> get logs;
   @override
   List<String> get keywords;
+  @override
+  String get query;
 
-  /// Create a copy of LogsAndKeywords
+  /// Create a copy of LogsState
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$LogsAndKeywordsImplCopyWith<_$LogsAndKeywordsImpl> get copyWith =>
+  _$$LogsStateImplCopyWith<_$LogsStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
-ConnectionsAndKeywords _$ConnectionsAndKeywordsFromJson(
-    Map<String, dynamic> json) {
-  return _ConnectionsAndKeywords.fromJson(json);
-}
-
 /// @nodoc
-mixin _$ConnectionsAndKeywords {
+mixin _$ConnectionsState {
   List<Connection> get connections => throw _privateConstructorUsedError;
   List<String> get keywords => throw _privateConstructorUsedError;
+  String get query => throw _privateConstructorUsedError;
 
-  /// Serializes this ConnectionsAndKeywords to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of ConnectionsAndKeywords
+  /// Create a copy of ConnectionsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $ConnectionsAndKeywordsCopyWith<ConnectionsAndKeywords> get copyWith =>
+  $ConnectionsStateCopyWith<ConnectionsState> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract class $ConnectionsAndKeywordsCopyWith<$Res> {
-  factory $ConnectionsAndKeywordsCopyWith(ConnectionsAndKeywords value,
-          $Res Function(ConnectionsAndKeywords) then) =
-      _$ConnectionsAndKeywordsCopyWithImpl<$Res, ConnectionsAndKeywords>;
+abstract class $ConnectionsStateCopyWith<$Res> {
+  factory $ConnectionsStateCopyWith(
+          ConnectionsState value, $Res Function(ConnectionsState) then) =
+      _$ConnectionsStateCopyWithImpl<$Res, ConnectionsState>;
   @useResult
-  $Res call({List<Connection> connections, List<String> keywords});
+  $Res call(
+      {List<Connection> connections, List<String> keywords, String query});
 }
 
 /// @nodoc
-class _$ConnectionsAndKeywordsCopyWithImpl<$Res,
-        $Val extends ConnectionsAndKeywords>
-    implements $ConnectionsAndKeywordsCopyWith<$Res> {
-  _$ConnectionsAndKeywordsCopyWithImpl(this._value, this._then);
+class _$ConnectionsStateCopyWithImpl<$Res, $Val extends ConnectionsState>
+    implements $ConnectionsStateCopyWith<$Res> {
+  _$ConnectionsStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
   final $Val _value;
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-  /// Create a copy of ConnectionsAndKeywords
+  /// Create a copy of ConnectionsState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? connections = null,
     Object? keywords = null,
+    Object? query = null,
   }) {
     return _then(_value.copyWith(
       connections: null == connections
@@ -1336,41 +1329,44 @@ class _$ConnectionsAndKeywordsCopyWithImpl<$Res,
           ? _value.keywords
           : keywords // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      query: null == query
+          ? _value.query
+          : query // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
 
 /// @nodoc
-abstract class _$$ConnectionsAndKeywordsImplCopyWith<$Res>
-    implements $ConnectionsAndKeywordsCopyWith<$Res> {
-  factory _$$ConnectionsAndKeywordsImplCopyWith(
-          _$ConnectionsAndKeywordsImpl value,
-          $Res Function(_$ConnectionsAndKeywordsImpl) then) =
-      __$$ConnectionsAndKeywordsImplCopyWithImpl<$Res>;
+abstract class _$$ConnectionsStateImplCopyWith<$Res>
+    implements $ConnectionsStateCopyWith<$Res> {
+  factory _$$ConnectionsStateImplCopyWith(_$ConnectionsStateImpl value,
+          $Res Function(_$ConnectionsStateImpl) then) =
+      __$$ConnectionsStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({List<Connection> connections, List<String> keywords});
+  $Res call(
+      {List<Connection> connections, List<String> keywords, String query});
 }
 
 /// @nodoc
-class __$$ConnectionsAndKeywordsImplCopyWithImpl<$Res>
-    extends _$ConnectionsAndKeywordsCopyWithImpl<$Res,
-        _$ConnectionsAndKeywordsImpl>
-    implements _$$ConnectionsAndKeywordsImplCopyWith<$Res> {
-  __$$ConnectionsAndKeywordsImplCopyWithImpl(
-      _$ConnectionsAndKeywordsImpl _value,
-      $Res Function(_$ConnectionsAndKeywordsImpl) _then)
+class __$$ConnectionsStateImplCopyWithImpl<$Res>
+    extends _$ConnectionsStateCopyWithImpl<$Res, _$ConnectionsStateImpl>
+    implements _$$ConnectionsStateImplCopyWith<$Res> {
+  __$$ConnectionsStateImplCopyWithImpl(_$ConnectionsStateImpl _value,
+      $Res Function(_$ConnectionsStateImpl) _then)
       : super(_value, _then);
 
-  /// Create a copy of ConnectionsAndKeywords
+  /// Create a copy of ConnectionsState
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? connections = null,
     Object? keywords = null,
+    Object? query = null,
   }) {
-    return _then(_$ConnectionsAndKeywordsImpl(
+    return _then(_$ConnectionsStateImpl(
       connections: null == connections
           ? _value._connections
           : connections // ignore: cast_nullable_to_non_nullable
@@ -1379,21 +1375,23 @@ class __$$ConnectionsAndKeywordsImplCopyWithImpl<$Res>
           ? _value._keywords
           : keywords // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      query: null == query
+          ? _value.query
+          : query // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
 
 /// @nodoc
-@JsonSerializable()
-class _$ConnectionsAndKeywordsImpl implements _ConnectionsAndKeywords {
-  const _$ConnectionsAndKeywordsImpl(
+
+class _$ConnectionsStateImpl implements _ConnectionsState {
+  const _$ConnectionsStateImpl(
       {final List<Connection> connections = const [],
-      final List<String> keywords = const []})
+      final List<String> keywords = const [],
+      this.query = ""})
       : _connections = connections,
         _keywords = keywords;
-
-  factory _$ConnectionsAndKeywordsImpl.fromJson(Map<String, dynamic> json) =>
-      _$$ConnectionsAndKeywordsImplFromJson(json);
 
   final List<Connection> _connections;
   @override
@@ -1414,63 +1412,61 @@ class _$ConnectionsAndKeywordsImpl implements _ConnectionsAndKeywords {
   }
 
   @override
+  @JsonKey()
+  final String query;
+
+  @override
   String toString() {
-    return 'ConnectionsAndKeywords(connections: $connections, keywords: $keywords)';
+    return 'ConnectionsState(connections: $connections, keywords: $keywords, query: $query)';
   }
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _$ConnectionsAndKeywordsImpl &&
+            other is _$ConnectionsStateImpl &&
             const DeepCollectionEquality()
                 .equals(other._connections, _connections) &&
-            const DeepCollectionEquality().equals(other._keywords, _keywords));
+            const DeepCollectionEquality().equals(other._keywords, _keywords) &&
+            (identical(other.query, query) || other.query == query));
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(_connections),
-      const DeepCollectionEquality().hash(_keywords));
+      const DeepCollectionEquality().hash(_keywords),
+      query);
 
-  /// Create a copy of ConnectionsAndKeywords
+  /// Create a copy of ConnectionsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
-  _$$ConnectionsAndKeywordsImplCopyWith<_$ConnectionsAndKeywordsImpl>
-      get copyWith => __$$ConnectionsAndKeywordsImplCopyWithImpl<
-          _$ConnectionsAndKeywordsImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$ConnectionsAndKeywordsImplToJson(
-      this,
-    );
-  }
+  _$$ConnectionsStateImplCopyWith<_$ConnectionsStateImpl> get copyWith =>
+      __$$ConnectionsStateImplCopyWithImpl<_$ConnectionsStateImpl>(
+          this, _$identity);
 }
 
-abstract class _ConnectionsAndKeywords implements ConnectionsAndKeywords {
-  const factory _ConnectionsAndKeywords(
+abstract class _ConnectionsState implements ConnectionsState {
+  const factory _ConnectionsState(
       {final List<Connection> connections,
-      final List<String> keywords}) = _$ConnectionsAndKeywordsImpl;
-
-  factory _ConnectionsAndKeywords.fromJson(Map<String, dynamic> json) =
-      _$ConnectionsAndKeywordsImpl.fromJson;
+      final List<String> keywords,
+      final String query}) = _$ConnectionsStateImpl;
 
   @override
   List<Connection> get connections;
   @override
   List<String> get keywords;
+  @override
+  String get query;
 
-  /// Create a copy of ConnectionsAndKeywords
+  /// Create a copy of ConnectionsState
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$ConnectionsAndKeywordsImplCopyWith<_$ConnectionsAndKeywordsImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  _$$ConnectionsStateImplCopyWith<_$ConnectionsStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 DAV _$DAVFromJson(Map<String, dynamic> json) {
@@ -1988,265 +1984,6 @@ abstract class _VersionInfo implements VersionInfo {
       throw _privateConstructorUsedError;
 }
 
-Group _$GroupFromJson(Map<String, dynamic> json) {
-  return _Group.fromJson(json);
-}
-
-/// @nodoc
-mixin _$Group {
-  GroupType get type => throw _privateConstructorUsedError;
-  List<Proxy> get all => throw _privateConstructorUsedError;
-  String? get now => throw _privateConstructorUsedError;
-  bool? get hidden => throw _privateConstructorUsedError;
-  String get icon => throw _privateConstructorUsedError;
-  String get name => throw _privateConstructorUsedError;
-
-  /// Serializes this Group to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-
-  /// Create a copy of Group
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $GroupCopyWith<Group> get copyWith => throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $GroupCopyWith<$Res> {
-  factory $GroupCopyWith(Group value, $Res Function(Group) then) =
-      _$GroupCopyWithImpl<$Res, Group>;
-  @useResult
-  $Res call(
-      {GroupType type,
-      List<Proxy> all,
-      String? now,
-      bool? hidden,
-      String icon,
-      String name});
-}
-
-/// @nodoc
-class _$GroupCopyWithImpl<$Res, $Val extends Group>
-    implements $GroupCopyWith<$Res> {
-  _$GroupCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of Group
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? type = null,
-    Object? all = null,
-    Object? now = freezed,
-    Object? hidden = freezed,
-    Object? icon = null,
-    Object? name = null,
-  }) {
-    return _then(_value.copyWith(
-      type: null == type
-          ? _value.type
-          : type // ignore: cast_nullable_to_non_nullable
-              as GroupType,
-      all: null == all
-          ? _value.all
-          : all // ignore: cast_nullable_to_non_nullable
-              as List<Proxy>,
-      now: freezed == now
-          ? _value.now
-          : now // ignore: cast_nullable_to_non_nullable
-              as String?,
-      hidden: freezed == hidden
-          ? _value.hidden
-          : hidden // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      icon: null == icon
-          ? _value.icon
-          : icon // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$GroupImplCopyWith<$Res> implements $GroupCopyWith<$Res> {
-  factory _$$GroupImplCopyWith(
-          _$GroupImpl value, $Res Function(_$GroupImpl) then) =
-      __$$GroupImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {GroupType type,
-      List<Proxy> all,
-      String? now,
-      bool? hidden,
-      String icon,
-      String name});
-}
-
-/// @nodoc
-class __$$GroupImplCopyWithImpl<$Res>
-    extends _$GroupCopyWithImpl<$Res, _$GroupImpl>
-    implements _$$GroupImplCopyWith<$Res> {
-  __$$GroupImplCopyWithImpl(
-      _$GroupImpl _value, $Res Function(_$GroupImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of Group
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? type = null,
-    Object? all = null,
-    Object? now = freezed,
-    Object? hidden = freezed,
-    Object? icon = null,
-    Object? name = null,
-  }) {
-    return _then(_$GroupImpl(
-      type: null == type
-          ? _value.type
-          : type // ignore: cast_nullable_to_non_nullable
-              as GroupType,
-      all: null == all
-          ? _value._all
-          : all // ignore: cast_nullable_to_non_nullable
-              as List<Proxy>,
-      now: freezed == now
-          ? _value.now
-          : now // ignore: cast_nullable_to_non_nullable
-              as String?,
-      hidden: freezed == hidden
-          ? _value.hidden
-          : hidden // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      icon: null == icon
-          ? _value.icon
-          : icon // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
-  }
-}
-
-/// @nodoc
-@JsonSerializable()
-class _$GroupImpl implements _Group {
-  const _$GroupImpl(
-      {required this.type,
-      final List<Proxy> all = const [],
-      this.now,
-      this.hidden,
-      this.icon = "",
-      required this.name})
-      : _all = all;
-
-  factory _$GroupImpl.fromJson(Map<String, dynamic> json) =>
-      _$$GroupImplFromJson(json);
-
-  @override
-  final GroupType type;
-  final List<Proxy> _all;
-  @override
-  @JsonKey()
-  List<Proxy> get all {
-    if (_all is EqualUnmodifiableListView) return _all;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_all);
-  }
-
-  @override
-  final String? now;
-  @override
-  final bool? hidden;
-  @override
-  @JsonKey()
-  final String icon;
-  @override
-  final String name;
-
-  @override
-  String toString() {
-    return 'Group(type: $type, all: $all, now: $now, hidden: $hidden, icon: $icon, name: $name)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$GroupImpl &&
-            (identical(other.type, type) || other.type == type) &&
-            const DeepCollectionEquality().equals(other._all, _all) &&
-            (identical(other.now, now) || other.now == now) &&
-            (identical(other.hidden, hidden) || other.hidden == hidden) &&
-            (identical(other.icon, icon) || other.icon == icon) &&
-            (identical(other.name, name) || other.name == name));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, type,
-      const DeepCollectionEquality().hash(_all), now, hidden, icon, name);
-
-  /// Create a copy of Group
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$GroupImplCopyWith<_$GroupImpl> get copyWith =>
-      __$$GroupImplCopyWithImpl<_$GroupImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$GroupImplToJson(
-      this,
-    );
-  }
-}
-
-abstract class _Group implements Group {
-  const factory _Group(
-      {required final GroupType type,
-      final List<Proxy> all,
-      final String? now,
-      final bool? hidden,
-      final String icon,
-      required final String name}) = _$GroupImpl;
-
-  factory _Group.fromJson(Map<String, dynamic> json) = _$GroupImpl.fromJson;
-
-  @override
-  GroupType get type;
-  @override
-  List<Proxy> get all;
-  @override
-  String? get now;
-  @override
-  bool? get hidden;
-  @override
-  String get icon;
-  @override
-  String get name;
-
-  /// Create a copy of Group
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$GroupImplCopyWith<_$GroupImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
 Proxy _$ProxyFromJson(Map<String, dynamic> json) {
   return _Proxy.fromJson(json);
 }
@@ -2424,6 +2161,292 @@ abstract class _Proxy implements Proxy {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ProxyImplCopyWith<_$ProxyImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+Group _$GroupFromJson(Map<String, dynamic> json) {
+  return _Group.fromJson(json);
+}
+
+/// @nodoc
+mixin _$Group {
+  GroupType get type => throw _privateConstructorUsedError;
+  List<Proxy> get all => throw _privateConstructorUsedError;
+  String? get now => throw _privateConstructorUsedError;
+  bool? get hidden => throw _privateConstructorUsedError;
+  String? get testUrl => throw _privateConstructorUsedError;
+  String get icon => throw _privateConstructorUsedError;
+  String get name => throw _privateConstructorUsedError;
+
+  /// Serializes this Group to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of Group
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $GroupCopyWith<Group> get copyWith => throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $GroupCopyWith<$Res> {
+  factory $GroupCopyWith(Group value, $Res Function(Group) then) =
+      _$GroupCopyWithImpl<$Res, Group>;
+  @useResult
+  $Res call(
+      {GroupType type,
+      List<Proxy> all,
+      String? now,
+      bool? hidden,
+      String? testUrl,
+      String icon,
+      String name});
+}
+
+/// @nodoc
+class _$GroupCopyWithImpl<$Res, $Val extends Group>
+    implements $GroupCopyWith<$Res> {
+  _$GroupCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of Group
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? type = null,
+    Object? all = null,
+    Object? now = freezed,
+    Object? hidden = freezed,
+    Object? testUrl = freezed,
+    Object? icon = null,
+    Object? name = null,
+  }) {
+    return _then(_value.copyWith(
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as GroupType,
+      all: null == all
+          ? _value.all
+          : all // ignore: cast_nullable_to_non_nullable
+              as List<Proxy>,
+      now: freezed == now
+          ? _value.now
+          : now // ignore: cast_nullable_to_non_nullable
+              as String?,
+      hidden: freezed == hidden
+          ? _value.hidden
+          : hidden // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      testUrl: freezed == testUrl
+          ? _value.testUrl
+          : testUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      icon: null == icon
+          ? _value.icon
+          : icon // ignore: cast_nullable_to_non_nullable
+              as String,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$GroupImplCopyWith<$Res> implements $GroupCopyWith<$Res> {
+  factory _$$GroupImplCopyWith(
+          _$GroupImpl value, $Res Function(_$GroupImpl) then) =
+      __$$GroupImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {GroupType type,
+      List<Proxy> all,
+      String? now,
+      bool? hidden,
+      String? testUrl,
+      String icon,
+      String name});
+}
+
+/// @nodoc
+class __$$GroupImplCopyWithImpl<$Res>
+    extends _$GroupCopyWithImpl<$Res, _$GroupImpl>
+    implements _$$GroupImplCopyWith<$Res> {
+  __$$GroupImplCopyWithImpl(
+      _$GroupImpl _value, $Res Function(_$GroupImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of Group
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? type = null,
+    Object? all = null,
+    Object? now = freezed,
+    Object? hidden = freezed,
+    Object? testUrl = freezed,
+    Object? icon = null,
+    Object? name = null,
+  }) {
+    return _then(_$GroupImpl(
+      type: null == type
+          ? _value.type
+          : type // ignore: cast_nullable_to_non_nullable
+              as GroupType,
+      all: null == all
+          ? _value._all
+          : all // ignore: cast_nullable_to_non_nullable
+              as List<Proxy>,
+      now: freezed == now
+          ? _value.now
+          : now // ignore: cast_nullable_to_non_nullable
+              as String?,
+      hidden: freezed == hidden
+          ? _value.hidden
+          : hidden // ignore: cast_nullable_to_non_nullable
+              as bool?,
+      testUrl: freezed == testUrl
+          ? _value.testUrl
+          : testUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      icon: null == icon
+          ? _value.icon
+          : icon // ignore: cast_nullable_to_non_nullable
+              as String,
+      name: null == name
+          ? _value.name
+          : name // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$GroupImpl implements _Group {
+  const _$GroupImpl(
+      {required this.type,
+      final List<Proxy> all = const [],
+      this.now,
+      this.hidden,
+      this.testUrl,
+      this.icon = "",
+      required this.name})
+      : _all = all;
+
+  factory _$GroupImpl.fromJson(Map<String, dynamic> json) =>
+      _$$GroupImplFromJson(json);
+
+  @override
+  final GroupType type;
+  final List<Proxy> _all;
+  @override
+  @JsonKey()
+  List<Proxy> get all {
+    if (_all is EqualUnmodifiableListView) return _all;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_all);
+  }
+
+  @override
+  final String? now;
+  @override
+  final bool? hidden;
+  @override
+  final String? testUrl;
+  @override
+  @JsonKey()
+  final String icon;
+  @override
+  final String name;
+
+  @override
+  String toString() {
+    return 'Group(type: $type, all: $all, now: $now, hidden: $hidden, testUrl: $testUrl, icon: $icon, name: $name)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$GroupImpl &&
+            (identical(other.type, type) || other.type == type) &&
+            const DeepCollectionEquality().equals(other._all, _all) &&
+            (identical(other.now, now) || other.now == now) &&
+            (identical(other.hidden, hidden) || other.hidden == hidden) &&
+            (identical(other.testUrl, testUrl) || other.testUrl == testUrl) &&
+            (identical(other.icon, icon) || other.icon == icon) &&
+            (identical(other.name, name) || other.name == name));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      type,
+      const DeepCollectionEquality().hash(_all),
+      now,
+      hidden,
+      testUrl,
+      icon,
+      name);
+
+  /// Create a copy of Group
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$GroupImplCopyWith<_$GroupImpl> get copyWith =>
+      __$$GroupImplCopyWithImpl<_$GroupImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$GroupImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _Group implements Group {
+  const factory _Group(
+      {required final GroupType type,
+      final List<Proxy> all,
+      final String? now,
+      final bool? hidden,
+      final String? testUrl,
+      final String icon,
+      required final String name}) = _$GroupImpl;
+
+  factory _Group.fromJson(Map<String, dynamic> json) = _$GroupImpl.fromJson;
+
+  @override
+  GroupType get type;
+  @override
+  List<Proxy> get all;
+  @override
+  String? get now;
+  @override
+  bool? get hidden;
+  @override
+  String? get testUrl;
+  @override
+  String get icon;
+  @override
+  String get name;
+
+  /// Create a copy of Group
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$GroupImplCopyWith<_$GroupImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

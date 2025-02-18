@@ -12,6 +12,7 @@ import 'card.dart';
 import 'common.dart';
 
 List<Proxy> currentProxies = [];
+String? currentTestUrl;
 
 typedef GroupNameKeyMap = Map<String, GlobalObjectKey<ProxyGroupViewState>>;
 
@@ -30,8 +31,8 @@ class ProxiesTabFragmentState extends State<ProxiesTabFragment>
 
   @override
   void dispose() {
-    super.dispose();
     _destroyTabController();
+    super.dispose();
   }
 
   scrollToGroupSelected() {
@@ -62,49 +63,46 @@ class ProxiesTabFragmentState extends State<ProxiesTabFragment>
       context: context,
       width: 380,
       isScrollControlled: false,
-      builder: (context) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Selector2<AppState, Config, ProxiesSelectorState>(
-            selector: (_, appState, config) {
-              final currentGroups = appState.currentGroups;
-              final groupNames = currentGroups.map((e) => e.name).toList();
-              return ProxiesSelectorState(
-                groupNames: groupNames,
-                currentGroupName: config.currentGroupName,
-              );
-            },
-            builder: (_, state, __) {
-              return SizedBox(
-                width: double.infinity,
-                child: Wrap(
-                  alignment: WrapAlignment.center,
-                  runSpacing: 8,
-                  spacing: 8,
-                  children: [
-                    for (final groupName in state.groupNames)
-                      SettingTextCard(
-                        groupName,
-                        onPressed: () {
-                          final index = state.groupNames
-                              .indexWhere((item) => item == groupName);
-                          if (index == -1) return;
-                          _tabController?.animateTo(index);
-                          globalState.appController.config
-                              .updateCurrentGroupName(
-                            groupName,
-                          );
-                          Navigator.of(context).pop();
-                        },
-                        isSelected: groupName == state.currentGroupName,
-                      )
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Selector2<AppState, Config, ProxiesSelectorState>(
+          selector: (_, appState, config) {
+            final currentGroups = appState.currentGroups;
+            final groupNames = currentGroups.map((e) => e.name).toList();
+            return ProxiesSelectorState(
+              groupNames: groupNames,
+              currentGroupName: config.currentGroupName,
+            );
+          },
+          builder: (_, state, __) {
+            return SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                runSpacing: 8,
+                spacing: 8,
+                children: [
+                  for (final groupName in state.groupNames)
+                    SettingTextCard(
+                      groupName,
+                      onPressed: () {
+                        final index = state.groupNames
+                            .indexWhere((item) => item == groupName);
+                        if (index == -1) return;
+                        _tabController?.animateTo(index);
+                        globalState.appController.config.updateCurrentGroupName(
+                          groupName,
+                        );
+                        Navigator.of(context).pop();
+                      },
+                      isSelected: groupName == state.currentGroupName,
+                    )
+                ],
+              ),
+            );
+          },
+        ),
+      ),
       title: appLocalizations.proxyGroup,
     );
   }
@@ -117,6 +115,7 @@ class ProxiesTabFragmentState extends State<ProxiesTabFragment>
     }
     final currentGroup = currentGroups[index ?? _tabController!.index];
     currentProxies = currentGroup.all;
+    currentTestUrl = currentGroup.testUrl;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       appController.config.updateCurrentGroupName(
         currentGroup.name,
@@ -164,6 +163,11 @@ class ProxiesTabFragmentState extends State<ProxiesTabFragment>
         return false;
       },
       builder: (_, state, __) {
+        if (state.groupNames.isEmpty) {
+          return NullStatus(
+            label: appLocalizations.nullProxies,
+          );
+        }
         final index = state.groupNames.indexWhere(
           (item) => item == state.currentGroupName,
         );
@@ -276,14 +280,17 @@ class ProxyGroupViewState extends State<ProxyGroupView> {
   _delayTest() async {
     if (isLock) return;
     isLock = true;
-    await delayTest(currentProxies);
+    await delayTest(
+      currentProxies,
+      currentTestUrl,
+    );
     isLock = false;
   }
 
   @override
   void dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
 
   scrollToSelected() {
@@ -292,6 +299,7 @@ class ProxyGroupViewState extends State<ProxyGroupView> {
     }
     final sortedProxies = globalState.appController.getSortProxies(
       currentProxies,
+      currentTestUrl,
     );
     _controller.animateTo(
       min(
@@ -312,9 +320,7 @@ class ProxyGroupViewState extends State<ProxyGroupView> {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final commonScaffoldState =
-          context.findAncestorStateOfType<CommonScaffoldState>();
-      commonScaffoldState?.floatingActionButton = DelayTestButton(
+      context.commonScaffoldState?.floatingActionButton = DelayTestButton(
         onClick: () async {
           await _delayTest();
         },
@@ -337,6 +343,7 @@ class ProxyGroupViewState extends State<ProxyGroupView> {
           sortNum: appState.sortNum,
           proxies: group.all,
           groupType: group.type,
+          testUrl: group.testUrl,
         );
       },
       builder: (_, state, __) {
@@ -345,6 +352,7 @@ class ProxyGroupViewState extends State<ProxyGroupView> {
         final proxyCardType = state.proxyCardType;
         final sortedProxies = globalState.appController.getSortProxies(
           proxies,
+          state.testUrl,
         );
         return ActiveBuilder(
           label: "proxies",
@@ -372,6 +380,7 @@ class ProxyGroupViewState extends State<ProxyGroupView> {
               itemBuilder: (_, index) {
                 final proxy = sortedProxies[index];
                 return ProxyCard(
+                  testUrl: state.testUrl,
                   groupType: state.groupType,
                   type: proxyCardType,
                   key: ValueKey('$groupName.${proxy.name}'),

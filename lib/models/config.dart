@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
@@ -8,17 +10,44 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'models.dart';
 
 part 'generated/config.freezed.dart';
+
 part 'generated/config.g.dart';
 
 final defaultAppSetting = const AppSetting().copyWith(
   isAnimateToPage: system.isDesktop ? false : true,
 );
 
+const List<DashboardWidget> defaultDashboardWidgets = [
+  DashboardWidget.networkSpeed,
+  DashboardWidget.systemProxyButton,
+  DashboardWidget.tunButton,
+  DashboardWidget.outboundMode,
+  DashboardWidget.networkDetection,
+  DashboardWidget.trafficUsage,
+  DashboardWidget.intranetIp,
+];
+
+List<DashboardWidget> dashboardWidgetsSafeFormJson(
+  List<dynamic>? dashboardWidgets,
+) {
+  try {
+    return dashboardWidgets
+            ?.map((e) => $enumDecode(_$DashboardWidgetEnumMap, e))
+            .toList() ??
+        defaultDashboardWidgets;
+  } catch (_) {
+    return defaultDashboardWidgets;
+  }
+}
+
 @freezed
 class AppSetting with _$AppSetting {
   const factory AppSetting({
     String? locale,
-    @Default(false) bool onlyProxy,
+    @Default(defaultDashboardWidgets)
+    @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+    List<DashboardWidget> dashboardWidgets,
+    @Default(false) bool onlyStatisticsProxy,
     @Default(false) bool autoLaunch,
     @Default(false) bool silentLaunch,
     @Default(false) bool autoRun,
@@ -36,7 +65,7 @@ class AppSetting with _$AppSetting {
   factory AppSetting.fromJson(Map<String, Object?> json) =>
       _$AppSettingFromJson(json);
 
-  factory AppSetting.realFromJson(Map<String, Object?>? json) {
+  factory AppSetting.safeFromJson(Map<String, Object?>? json) {
     final appSetting =
         json == null ? defaultAppSetting : AppSetting.fromJson(json);
     return appSetting.copyWith(
@@ -108,6 +137,8 @@ class VpnProps with _$VpnProps {
     @Default(true) bool systemProxy,
     @Default(false) bool ipv6,
     @Default(true) bool allowBypass,
+    @Default(RouteMode.bypassPrivate) RouteMode routeMode,
+    @JsonKey(name: "route-address") @Default([]) List<String> routeAddress,
   }) = _VpnProps;
 
   factory VpnProps.fromJson(Map<String, Object?>? json) =>
@@ -163,7 +194,7 @@ class ThemeProps with _$ThemeProps {
   factory ThemeProps.fromJson(Map<String, Object?> json) =>
       _$ThemePropsFromJson(json);
 
-  factory ThemeProps.realFromJson(Map<String, Object?>? json) {
+  factory ThemeProps.safeFromJson(Map<String, Object?>? json) {
     if (json == null) {
       return defaultThemeProps;
     }
@@ -190,6 +221,7 @@ class Config extends ChangeNotifier {
   bool _overrideDns;
   List<HotKeyAction> _hotKeyActions;
   ProxiesStyle _proxiesStyle;
+  ClashConfig _patchClashConfig;
 
   Config()
       : _profiles = [],
@@ -202,9 +234,10 @@ class Config extends ChangeNotifier {
         _appSetting = defaultAppSetting,
         _hotKeyActions = [],
         _proxiesStyle = defaultProxiesStyle,
-        _themeProps = defaultThemeProps;
+        _themeProps = defaultThemeProps,
+        _patchClashConfig = defaultClashConfig;
 
-  @JsonKey(fromJson: AppSetting.realFromJson)
+  @JsonKey(fromJson: AppSetting.safeFromJson)
   AppSetting get appSetting => _appSetting;
 
   set appSetting(AppSetting value) {
@@ -424,7 +457,17 @@ class Config extends ChangeNotifier {
     }
   }
 
-  @JsonKey(fromJson: ThemeProps.realFromJson)
+  @JsonKey(fromJson: ClashConfig.safeFormJson)
+  ClashConfig get patchClashConfig => _patchClashConfig;
+
+  set patchClashConfig(ClashConfig value) {
+    if (_patchClashConfig != value) {
+      _patchClashConfig = value;
+      notifyListeners();
+    }
+  }
+
+  @JsonKey(fromJson: ThemeProps.safeFromJson)
   ThemeProps get themeProps => _themeProps;
 
   set themeProps(ThemeProps value) {
@@ -445,6 +488,18 @@ class Config extends ChangeNotifier {
     notifyListeners();
   }
 
+  // @JsonKey(
+  //   includeToJson: false,
+  //   includeFromJson: false,
+  // )
+  // List<String> get routeAddress {
+  //   if(networkProps.routeMode == RouteMode.bypassPrivate){
+  //     return defaultBypassDomain;
+  //   }else {
+  //     return _patchClashConfig.tun.routeAddress;
+  //   }
+  // }
+
   update([
     Config? config,
     RecoveryOption recoveryOptions = RecoveryOption.all,
@@ -459,6 +514,7 @@ class Config extends ChangeNotifier {
         _currentProfileId = _profiles.first.id;
       }
       if (onlyProfiles) return;
+      _patchClashConfig = config._patchClashConfig;
       _appSetting = config._appSetting;
       _currentProfileId = config._currentProfileId;
       _dav = config._dav;
@@ -481,10 +537,5 @@ class Config extends ChangeNotifier {
 
   factory Config.fromJson(Map<String, dynamic> json) {
     return _$ConfigFromJson(json);
-  }
-
-  @override
-  String toString() {
-    return 'Config{_appSetting: $_appSetting, _profiles: $_profiles, _currentProfileId: $_currentProfileId, _isAccessControl: $_isAccessControl, _accessControl: $_accessControl, _dav: $_dav, _windowProps: $_windowProps, _themeProps: $_themeProps, _vpnProps: $_vpnProps, _networkProps: $_networkProps, _overrideDns: $_overrideDns, _hotKeyActions: $_hotKeyActions, _proxiesStyle: $_proxiesStyle}';
   }
 }

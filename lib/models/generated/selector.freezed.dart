@@ -2298,6 +2298,7 @@ abstract class _ProxiesListSelectorState implements ProxiesListSelectorState {
 
 /// @nodoc
 mixin _$ProxyGroupSelectorState {
+  String? get testUrl => throw _privateConstructorUsedError;
   ProxiesSortType get proxiesSortType => throw _privateConstructorUsedError;
   ProxyCardType get proxyCardType => throw _privateConstructorUsedError;
   num get sortNum => throw _privateConstructorUsedError;
@@ -2319,7 +2320,8 @@ abstract class $ProxyGroupSelectorStateCopyWith<$Res> {
       _$ProxyGroupSelectorStateCopyWithImpl<$Res, ProxyGroupSelectorState>;
   @useResult
   $Res call(
-      {ProxiesSortType proxiesSortType,
+      {String? testUrl,
+      ProxiesSortType proxiesSortType,
       ProxyCardType proxyCardType,
       num sortNum,
       GroupType groupType,
@@ -2343,6 +2345,7 @@ class _$ProxyGroupSelectorStateCopyWithImpl<$Res,
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? testUrl = freezed,
     Object? proxiesSortType = null,
     Object? proxyCardType = null,
     Object? sortNum = null,
@@ -2351,6 +2354,10 @@ class _$ProxyGroupSelectorStateCopyWithImpl<$Res,
     Object? columns = null,
   }) {
     return _then(_value.copyWith(
+      testUrl: freezed == testUrl
+          ? _value.testUrl
+          : testUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
       proxiesSortType: null == proxiesSortType
           ? _value.proxiesSortType
           : proxiesSortType // ignore: cast_nullable_to_non_nullable
@@ -2389,7 +2396,8 @@ abstract class _$$ProxyGroupSelectorStateImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {ProxiesSortType proxiesSortType,
+      {String? testUrl,
+      ProxiesSortType proxiesSortType,
       ProxyCardType proxyCardType,
       num sortNum,
       GroupType groupType,
@@ -2412,6 +2420,7 @@ class __$$ProxyGroupSelectorStateImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? testUrl = freezed,
     Object? proxiesSortType = null,
     Object? proxyCardType = null,
     Object? sortNum = null,
@@ -2420,6 +2429,10 @@ class __$$ProxyGroupSelectorStateImplCopyWithImpl<$Res>
     Object? columns = null,
   }) {
     return _then(_$ProxyGroupSelectorStateImpl(
+      testUrl: freezed == testUrl
+          ? _value.testUrl
+          : testUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
       proxiesSortType: null == proxiesSortType
           ? _value.proxiesSortType
           : proxiesSortType // ignore: cast_nullable_to_non_nullable
@@ -2452,7 +2465,8 @@ class __$$ProxyGroupSelectorStateImplCopyWithImpl<$Res>
 
 class _$ProxyGroupSelectorStateImpl implements _ProxyGroupSelectorState {
   const _$ProxyGroupSelectorStateImpl(
-      {required this.proxiesSortType,
+      {required this.testUrl,
+      required this.proxiesSortType,
       required this.proxyCardType,
       required this.sortNum,
       required this.groupType,
@@ -2460,6 +2474,8 @@ class _$ProxyGroupSelectorStateImpl implements _ProxyGroupSelectorState {
       required this.columns})
       : _proxies = proxies;
 
+  @override
+  final String? testUrl;
   @override
   final ProxiesSortType proxiesSortType;
   @override
@@ -2481,7 +2497,7 @@ class _$ProxyGroupSelectorStateImpl implements _ProxyGroupSelectorState {
 
   @override
   String toString() {
-    return 'ProxyGroupSelectorState(proxiesSortType: $proxiesSortType, proxyCardType: $proxyCardType, sortNum: $sortNum, groupType: $groupType, proxies: $proxies, columns: $columns)';
+    return 'ProxyGroupSelectorState(testUrl: $testUrl, proxiesSortType: $proxiesSortType, proxyCardType: $proxyCardType, sortNum: $sortNum, groupType: $groupType, proxies: $proxies, columns: $columns)';
   }
 
   @override
@@ -2489,6 +2505,7 @@ class _$ProxyGroupSelectorStateImpl implements _ProxyGroupSelectorState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ProxyGroupSelectorStateImpl &&
+            (identical(other.testUrl, testUrl) || other.testUrl == testUrl) &&
             (identical(other.proxiesSortType, proxiesSortType) ||
                 other.proxiesSortType == proxiesSortType) &&
             (identical(other.proxyCardType, proxyCardType) ||
@@ -2503,6 +2520,7 @@ class _$ProxyGroupSelectorStateImpl implements _ProxyGroupSelectorState {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      testUrl,
       proxiesSortType,
       proxyCardType,
       sortNum,
@@ -2522,13 +2540,16 @@ class _$ProxyGroupSelectorStateImpl implements _ProxyGroupSelectorState {
 
 abstract class _ProxyGroupSelectorState implements ProxyGroupSelectorState {
   const factory _ProxyGroupSelectorState(
-      {required final ProxiesSortType proxiesSortType,
+      {required final String? testUrl,
+      required final ProxiesSortType proxiesSortType,
       required final ProxyCardType proxyCardType,
       required final num sortNum,
       required final GroupType groupType,
       required final List<Proxy> proxies,
       required final int columns}) = _$ProxyGroupSelectorStateImpl;
 
+  @override
+  String? get testUrl;
   @override
   ProxiesSortType get proxiesSortType;
   @override
@@ -3210,137 +3231,6 @@ abstract class _ProxiesActionsState implements ProxiesActionsState {
 }
 
 /// @nodoc
-mixin _$AutoLaunchState {
-  bool get isAutoLaunch => throw _privateConstructorUsedError;
-
-  /// Create a copy of AutoLaunchState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $AutoLaunchStateCopyWith<AutoLaunchState> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
-abstract class $AutoLaunchStateCopyWith<$Res> {
-  factory $AutoLaunchStateCopyWith(
-          AutoLaunchState value, $Res Function(AutoLaunchState) then) =
-      _$AutoLaunchStateCopyWithImpl<$Res, AutoLaunchState>;
-  @useResult
-  $Res call({bool isAutoLaunch});
-}
-
-/// @nodoc
-class _$AutoLaunchStateCopyWithImpl<$Res, $Val extends AutoLaunchState>
-    implements $AutoLaunchStateCopyWith<$Res> {
-  _$AutoLaunchStateCopyWithImpl(this._value, this._then);
-
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
-
-  /// Create a copy of AutoLaunchState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? isAutoLaunch = null,
-  }) {
-    return _then(_value.copyWith(
-      isAutoLaunch: null == isAutoLaunch
-          ? _value.isAutoLaunch
-          : isAutoLaunch // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ) as $Val);
-  }
-}
-
-/// @nodoc
-abstract class _$$AutoLaunchStateImplCopyWith<$Res>
-    implements $AutoLaunchStateCopyWith<$Res> {
-  factory _$$AutoLaunchStateImplCopyWith(_$AutoLaunchStateImpl value,
-          $Res Function(_$AutoLaunchStateImpl) then) =
-      __$$AutoLaunchStateImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({bool isAutoLaunch});
-}
-
-/// @nodoc
-class __$$AutoLaunchStateImplCopyWithImpl<$Res>
-    extends _$AutoLaunchStateCopyWithImpl<$Res, _$AutoLaunchStateImpl>
-    implements _$$AutoLaunchStateImplCopyWith<$Res> {
-  __$$AutoLaunchStateImplCopyWithImpl(
-      _$AutoLaunchStateImpl _value, $Res Function(_$AutoLaunchStateImpl) _then)
-      : super(_value, _then);
-
-  /// Create a copy of AutoLaunchState
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? isAutoLaunch = null,
-  }) {
-    return _then(_$AutoLaunchStateImpl(
-      isAutoLaunch: null == isAutoLaunch
-          ? _value.isAutoLaunch
-          : isAutoLaunch // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ));
-  }
-}
-
-/// @nodoc
-
-class _$AutoLaunchStateImpl implements _AutoLaunchState {
-  const _$AutoLaunchStateImpl({required this.isAutoLaunch});
-
-  @override
-  final bool isAutoLaunch;
-
-  @override
-  String toString() {
-    return 'AutoLaunchState(isAutoLaunch: $isAutoLaunch)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$AutoLaunchStateImpl &&
-            (identical(other.isAutoLaunch, isAutoLaunch) ||
-                other.isAutoLaunch == isAutoLaunch));
-  }
-
-  @override
-  int get hashCode => Object.hash(runtimeType, isAutoLaunch);
-
-  /// Create a copy of AutoLaunchState
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$AutoLaunchStateImplCopyWith<_$AutoLaunchStateImpl> get copyWith =>
-      __$$AutoLaunchStateImplCopyWithImpl<_$AutoLaunchStateImpl>(
-          this, _$identity);
-}
-
-abstract class _AutoLaunchState implements AutoLaunchState {
-  const factory _AutoLaunchState({required final bool isAutoLaunch}) =
-      _$AutoLaunchStateImpl;
-
-  @override
-  bool get isAutoLaunch;
-
-  /// Create a copy of AutoLaunchState
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$AutoLaunchStateImplCopyWith<_$AutoLaunchStateImpl> get copyWith =>
-      throw _privateConstructorUsedError;
-}
-
-/// @nodoc
 mixin _$ProxyState {
   bool get isStart => throw _privateConstructorUsedError;
   bool get systemProxy => throw _privateConstructorUsedError;
@@ -3689,9 +3579,10 @@ mixin _$ClashConfigState {
   bool get allowLan => throw _privateConstructorUsedError;
   bool get ipv6 => throw _privateConstructorUsedError;
   bool get overrideDns => throw _privateConstructorUsedError;
-  String get geodataLoader => throw _privateConstructorUsedError;
+  GeodataLoader get geodataLoader => throw _privateConstructorUsedError;
   LogLevel get logLevel => throw _privateConstructorUsedError;
-  String get externalController => throw _privateConstructorUsedError;
+  ExternalControllerStatus get externalController =>
+      throw _privateConstructorUsedError;
   Mode get mode => throw _privateConstructorUsedError;
   FindProcessMode get findProcessMode => throw _privateConstructorUsedError;
   int get keepAliveInterval => throw _privateConstructorUsedError;
@@ -3700,9 +3591,9 @@ mixin _$ClashConfigState {
   Map<String, String> get hosts => throw _privateConstructorUsedError;
   Tun get tun => throw _privateConstructorUsedError;
   Dns get dns => throw _privateConstructorUsedError;
-  Map<String, String> get geoXUrl => throw _privateConstructorUsedError;
+  GeoXUrl get geoXUrl => throw _privateConstructorUsedError;
   List<String> get rules => throw _privateConstructorUsedError;
-  String? get globalRealUa => throw _privateConstructorUsedError;
+  String? get globalUa => throw _privateConstructorUsedError;
 
   /// Create a copy of ClashConfigState
   /// with the given fields replaced by the non-null parameter values.
@@ -3722,9 +3613,9 @@ abstract class $ClashConfigStateCopyWith<$Res> {
       bool allowLan,
       bool ipv6,
       bool overrideDns,
-      String geodataLoader,
+      GeodataLoader geodataLoader,
       LogLevel logLevel,
-      String externalController,
+      ExternalControllerStatus externalController,
       Mode mode,
       FindProcessMode findProcessMode,
       int keepAliveInterval,
@@ -3733,12 +3624,13 @@ abstract class $ClashConfigStateCopyWith<$Res> {
       Map<String, String> hosts,
       Tun tun,
       Dns dns,
-      Map<String, String> geoXUrl,
+      GeoXUrl geoXUrl,
       List<String> rules,
-      String? globalRealUa});
+      String? globalUa});
 
   $TunCopyWith<$Res> get tun;
   $DnsCopyWith<$Res> get dns;
+  $GeoXUrlCopyWith<$Res> get geoXUrl;
 }
 
 /// @nodoc
@@ -3773,7 +3665,7 @@ class _$ClashConfigStateCopyWithImpl<$Res, $Val extends ClashConfigState>
     Object? dns = null,
     Object? geoXUrl = null,
     Object? rules = null,
-    Object? globalRealUa = freezed,
+    Object? globalUa = freezed,
   }) {
     return _then(_value.copyWith(
       mixedPort: null == mixedPort
@@ -3795,7 +3687,7 @@ class _$ClashConfigStateCopyWithImpl<$Res, $Val extends ClashConfigState>
       geodataLoader: null == geodataLoader
           ? _value.geodataLoader
           : geodataLoader // ignore: cast_nullable_to_non_nullable
-              as String,
+              as GeodataLoader,
       logLevel: null == logLevel
           ? _value.logLevel
           : logLevel // ignore: cast_nullable_to_non_nullable
@@ -3803,7 +3695,7 @@ class _$ClashConfigStateCopyWithImpl<$Res, $Val extends ClashConfigState>
       externalController: null == externalController
           ? _value.externalController
           : externalController // ignore: cast_nullable_to_non_nullable
-              as String,
+              as ExternalControllerStatus,
       mode: null == mode
           ? _value.mode
           : mode // ignore: cast_nullable_to_non_nullable
@@ -3839,14 +3731,14 @@ class _$ClashConfigStateCopyWithImpl<$Res, $Val extends ClashConfigState>
       geoXUrl: null == geoXUrl
           ? _value.geoXUrl
           : geoXUrl // ignore: cast_nullable_to_non_nullable
-              as Map<String, String>,
+              as GeoXUrl,
       rules: null == rules
           ? _value.rules
           : rules // ignore: cast_nullable_to_non_nullable
               as List<String>,
-      globalRealUa: freezed == globalRealUa
-          ? _value.globalRealUa
-          : globalRealUa // ignore: cast_nullable_to_non_nullable
+      globalUa: freezed == globalUa
+          ? _value.globalUa
+          : globalUa // ignore: cast_nullable_to_non_nullable
               as String?,
     ) as $Val);
   }
@@ -3870,6 +3762,16 @@ class _$ClashConfigStateCopyWithImpl<$Res, $Val extends ClashConfigState>
       return _then(_value.copyWith(dns: value) as $Val);
     });
   }
+
+  /// Create a copy of ClashConfigState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $GeoXUrlCopyWith<$Res> get geoXUrl {
+    return $GeoXUrlCopyWith<$Res>(_value.geoXUrl, (value) {
+      return _then(_value.copyWith(geoXUrl: value) as $Val);
+    });
+  }
 }
 
 /// @nodoc
@@ -3885,9 +3787,9 @@ abstract class _$$ClashConfigStateImplCopyWith<$Res>
       bool allowLan,
       bool ipv6,
       bool overrideDns,
-      String geodataLoader,
+      GeodataLoader geodataLoader,
       LogLevel logLevel,
-      String externalController,
+      ExternalControllerStatus externalController,
       Mode mode,
       FindProcessMode findProcessMode,
       int keepAliveInterval,
@@ -3896,14 +3798,16 @@ abstract class _$$ClashConfigStateImplCopyWith<$Res>
       Map<String, String> hosts,
       Tun tun,
       Dns dns,
-      Map<String, String> geoXUrl,
+      GeoXUrl geoXUrl,
       List<String> rules,
-      String? globalRealUa});
+      String? globalUa});
 
   @override
   $TunCopyWith<$Res> get tun;
   @override
   $DnsCopyWith<$Res> get dns;
+  @override
+  $GeoXUrlCopyWith<$Res> get geoXUrl;
 }
 
 /// @nodoc
@@ -3936,7 +3840,7 @@ class __$$ClashConfigStateImplCopyWithImpl<$Res>
     Object? dns = null,
     Object? geoXUrl = null,
     Object? rules = null,
-    Object? globalRealUa = freezed,
+    Object? globalUa = freezed,
   }) {
     return _then(_$ClashConfigStateImpl(
       mixedPort: null == mixedPort
@@ -3958,7 +3862,7 @@ class __$$ClashConfigStateImplCopyWithImpl<$Res>
       geodataLoader: null == geodataLoader
           ? _value.geodataLoader
           : geodataLoader // ignore: cast_nullable_to_non_nullable
-              as String,
+              as GeodataLoader,
       logLevel: null == logLevel
           ? _value.logLevel
           : logLevel // ignore: cast_nullable_to_non_nullable
@@ -3966,7 +3870,7 @@ class __$$ClashConfigStateImplCopyWithImpl<$Res>
       externalController: null == externalController
           ? _value.externalController
           : externalController // ignore: cast_nullable_to_non_nullable
-              as String,
+              as ExternalControllerStatus,
       mode: null == mode
           ? _value.mode
           : mode // ignore: cast_nullable_to_non_nullable
@@ -4000,16 +3904,16 @@ class __$$ClashConfigStateImplCopyWithImpl<$Res>
           : dns // ignore: cast_nullable_to_non_nullable
               as Dns,
       geoXUrl: null == geoXUrl
-          ? _value._geoXUrl
+          ? _value.geoXUrl
           : geoXUrl // ignore: cast_nullable_to_non_nullable
-              as Map<String, String>,
+              as GeoXUrl,
       rules: null == rules
           ? _value._rules
           : rules // ignore: cast_nullable_to_non_nullable
               as List<String>,
-      globalRealUa: freezed == globalRealUa
-          ? _value.globalRealUa
-          : globalRealUa // ignore: cast_nullable_to_non_nullable
+      globalUa: freezed == globalUa
+          ? _value.globalUa
+          : globalUa // ignore: cast_nullable_to_non_nullable
               as String?,
     ));
   }
@@ -4034,11 +3938,10 @@ class _$ClashConfigStateImpl implements _ClashConfigState {
       required final Map<String, String> hosts,
       required this.tun,
       required this.dns,
-      required final Map<String, String> geoXUrl,
+      required this.geoXUrl,
       required final List<String> rules,
-      required this.globalRealUa})
+      required this.globalUa})
       : _hosts = hosts,
-        _geoXUrl = geoXUrl,
         _rules = rules;
 
   @override
@@ -4050,11 +3953,11 @@ class _$ClashConfigStateImpl implements _ClashConfigState {
   @override
   final bool overrideDns;
   @override
-  final String geodataLoader;
+  final GeodataLoader geodataLoader;
   @override
   final LogLevel logLevel;
   @override
-  final String externalController;
+  final ExternalControllerStatus externalController;
   @override
   final Mode mode;
   @override
@@ -4077,14 +3980,8 @@ class _$ClashConfigStateImpl implements _ClashConfigState {
   final Tun tun;
   @override
   final Dns dns;
-  final Map<String, String> _geoXUrl;
   @override
-  Map<String, String> get geoXUrl {
-    if (_geoXUrl is EqualUnmodifiableMapView) return _geoXUrl;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_geoXUrl);
-  }
-
+  final GeoXUrl geoXUrl;
   final List<String> _rules;
   @override
   List<String> get rules {
@@ -4094,11 +3991,11 @@ class _$ClashConfigStateImpl implements _ClashConfigState {
   }
 
   @override
-  final String? globalRealUa;
+  final String? globalUa;
 
   @override
   String toString() {
-    return 'ClashConfigState(mixedPort: $mixedPort, allowLan: $allowLan, ipv6: $ipv6, overrideDns: $overrideDns, geodataLoader: $geodataLoader, logLevel: $logLevel, externalController: $externalController, mode: $mode, findProcessMode: $findProcessMode, keepAliveInterval: $keepAliveInterval, unifiedDelay: $unifiedDelay, tcpConcurrent: $tcpConcurrent, hosts: $hosts, tun: $tun, dns: $dns, geoXUrl: $geoXUrl, rules: $rules, globalRealUa: $globalRealUa)';
+    return 'ClashConfigState(mixedPort: $mixedPort, allowLan: $allowLan, ipv6: $ipv6, overrideDns: $overrideDns, geodataLoader: $geodataLoader, logLevel: $logLevel, externalController: $externalController, mode: $mode, findProcessMode: $findProcessMode, keepAliveInterval: $keepAliveInterval, unifiedDelay: $unifiedDelay, tcpConcurrent: $tcpConcurrent, hosts: $hosts, tun: $tun, dns: $dns, geoXUrl: $geoXUrl, rules: $rules, globalUa: $globalUa)';
   }
 
   @override
@@ -4131,10 +4028,10 @@ class _$ClashConfigStateImpl implements _ClashConfigState {
             const DeepCollectionEquality().equals(other._hosts, _hosts) &&
             (identical(other.tun, tun) || other.tun == tun) &&
             (identical(other.dns, dns) || other.dns == dns) &&
-            const DeepCollectionEquality().equals(other._geoXUrl, _geoXUrl) &&
+            (identical(other.geoXUrl, geoXUrl) || other.geoXUrl == geoXUrl) &&
             const DeepCollectionEquality().equals(other._rules, _rules) &&
-            (identical(other.globalRealUa, globalRealUa) ||
-                other.globalRealUa == globalRealUa));
+            (identical(other.globalUa, globalUa) ||
+                other.globalUa == globalUa));
   }
 
   @override
@@ -4155,9 +4052,9 @@ class _$ClashConfigStateImpl implements _ClashConfigState {
       const DeepCollectionEquality().hash(_hosts),
       tun,
       dns,
-      const DeepCollectionEquality().hash(_geoXUrl),
+      geoXUrl,
       const DeepCollectionEquality().hash(_rules),
-      globalRealUa);
+      globalUa);
 
   /// Create a copy of ClashConfigState
   /// with the given fields replaced by the non-null parameter values.
@@ -4175,9 +4072,9 @@ abstract class _ClashConfigState implements ClashConfigState {
       required final bool allowLan,
       required final bool ipv6,
       required final bool overrideDns,
-      required final String geodataLoader,
+      required final GeodataLoader geodataLoader,
       required final LogLevel logLevel,
-      required final String externalController,
+      required final ExternalControllerStatus externalController,
       required final Mode mode,
       required final FindProcessMode findProcessMode,
       required final int keepAliveInterval,
@@ -4186,9 +4083,9 @@ abstract class _ClashConfigState implements ClashConfigState {
       required final Map<String, String> hosts,
       required final Tun tun,
       required final Dns dns,
-      required final Map<String, String> geoXUrl,
+      required final GeoXUrl geoXUrl,
       required final List<String> rules,
-      required final String? globalRealUa}) = _$ClashConfigStateImpl;
+      required final String? globalUa}) = _$ClashConfigStateImpl;
 
   @override
   int get mixedPort;
@@ -4199,11 +4096,11 @@ abstract class _ClashConfigState implements ClashConfigState {
   @override
   bool get overrideDns;
   @override
-  String get geodataLoader;
+  GeodataLoader get geodataLoader;
   @override
   LogLevel get logLevel;
   @override
-  String get externalController;
+  ExternalControllerStatus get externalController;
   @override
   Mode get mode;
   @override
@@ -4221,17 +4118,178 @@ abstract class _ClashConfigState implements ClashConfigState {
   @override
   Dns get dns;
   @override
-  Map<String, String> get geoXUrl;
+  GeoXUrl get geoXUrl;
   @override
   List<String> get rules;
   @override
-  String? get globalRealUa;
+  String? get globalUa;
 
   /// Create a copy of ClashConfigState
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$ClashConfigStateImplCopyWith<_$ClashConfigStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$DashboardState {
+  List<DashboardWidget> get dashboardWidgets =>
+      throw _privateConstructorUsedError;
+  double get viewWidth => throw _privateConstructorUsedError;
+
+  /// Create a copy of DashboardState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $DashboardStateCopyWith<DashboardState> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $DashboardStateCopyWith<$Res> {
+  factory $DashboardStateCopyWith(
+          DashboardState value, $Res Function(DashboardState) then) =
+      _$DashboardStateCopyWithImpl<$Res, DashboardState>;
+  @useResult
+  $Res call({List<DashboardWidget> dashboardWidgets, double viewWidth});
+}
+
+/// @nodoc
+class _$DashboardStateCopyWithImpl<$Res, $Val extends DashboardState>
+    implements $DashboardStateCopyWith<$Res> {
+  _$DashboardStateCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of DashboardState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? dashboardWidgets = null,
+    Object? viewWidth = null,
+  }) {
+    return _then(_value.copyWith(
+      dashboardWidgets: null == dashboardWidgets
+          ? _value.dashboardWidgets
+          : dashboardWidgets // ignore: cast_nullable_to_non_nullable
+              as List<DashboardWidget>,
+      viewWidth: null == viewWidth
+          ? _value.viewWidth
+          : viewWidth // ignore: cast_nullable_to_non_nullable
+              as double,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$DashboardStateImplCopyWith<$Res>
+    implements $DashboardStateCopyWith<$Res> {
+  factory _$$DashboardStateImplCopyWith(_$DashboardStateImpl value,
+          $Res Function(_$DashboardStateImpl) then) =
+      __$$DashboardStateImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({List<DashboardWidget> dashboardWidgets, double viewWidth});
+}
+
+/// @nodoc
+class __$$DashboardStateImplCopyWithImpl<$Res>
+    extends _$DashboardStateCopyWithImpl<$Res, _$DashboardStateImpl>
+    implements _$$DashboardStateImplCopyWith<$Res> {
+  __$$DashboardStateImplCopyWithImpl(
+      _$DashboardStateImpl _value, $Res Function(_$DashboardStateImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of DashboardState
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? dashboardWidgets = null,
+    Object? viewWidth = null,
+  }) {
+    return _then(_$DashboardStateImpl(
+      dashboardWidgets: null == dashboardWidgets
+          ? _value._dashboardWidgets
+          : dashboardWidgets // ignore: cast_nullable_to_non_nullable
+              as List<DashboardWidget>,
+      viewWidth: null == viewWidth
+          ? _value.viewWidth
+          : viewWidth // ignore: cast_nullable_to_non_nullable
+              as double,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$DashboardStateImpl implements _DashboardState {
+  const _$DashboardStateImpl(
+      {required final List<DashboardWidget> dashboardWidgets,
+      required this.viewWidth})
+      : _dashboardWidgets = dashboardWidgets;
+
+  final List<DashboardWidget> _dashboardWidgets;
+  @override
+  List<DashboardWidget> get dashboardWidgets {
+    if (_dashboardWidgets is EqualUnmodifiableListView)
+      return _dashboardWidgets;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_dashboardWidgets);
+  }
+
+  @override
+  final double viewWidth;
+
+  @override
+  String toString() {
+    return 'DashboardState(dashboardWidgets: $dashboardWidgets, viewWidth: $viewWidth)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$DashboardStateImpl &&
+            const DeepCollectionEquality()
+                .equals(other._dashboardWidgets, _dashboardWidgets) &&
+            (identical(other.viewWidth, viewWidth) ||
+                other.viewWidth == viewWidth));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType,
+      const DeepCollectionEquality().hash(_dashboardWidgets), viewWidth);
+
+  /// Create a copy of DashboardState
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$DashboardStateImplCopyWith<_$DashboardStateImpl> get copyWith =>
+      __$$DashboardStateImplCopyWithImpl<_$DashboardStateImpl>(
+          this, _$identity);
+}
+
+abstract class _DashboardState implements DashboardState {
+  const factory _DashboardState(
+      {required final List<DashboardWidget> dashboardWidgets,
+      required final double viewWidth}) = _$DashboardStateImpl;
+
+  @override
+  List<DashboardWidget> get dashboardWidgets;
+  @override
+  double get viewWidth;
+
+  /// Create a copy of DashboardState
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$DashboardStateImplCopyWith<_$DashboardStateImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 

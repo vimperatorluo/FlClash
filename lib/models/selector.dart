@@ -123,6 +123,7 @@ class ProxiesListSelectorState with _$ProxiesListSelectorState {
 @freezed
 class ProxyGroupSelectorState with _$ProxyGroupSelectorState {
   const factory ProxyGroupSelectorState({
+    required String? testUrl,
     required ProxiesSortType proxiesSortType,
     required ProxyCardType proxyCardType,
     required num sortNum,
@@ -162,8 +163,7 @@ extension PackageListSelectorStateExt on PackageListSelectorState {
               other.getPinyin(a.label),
               other.getPinyin(b.label),
             ),
-          AccessSortType.time =>
-            a.firstInstallTime.compareTo(b.firstInstallTime),
+          AccessSortType.time => b.lastUpdateTime.compareTo(a.lastUpdateTime),
         };
       },
     ).sorted(
@@ -196,13 +196,6 @@ class ProxiesActionsState with _$ProxiesActionsState {
 }
 
 @freezed
-class AutoLaunchState with _$AutoLaunchState {
-  const factory AutoLaunchState({
-    required bool isAutoLaunch,
-  }) = _AutoLaunchState;
-}
-
-@freezed
 class ProxyState with _$ProxyState {
   const factory ProxyState({
     required bool isStart,
@@ -227,9 +220,9 @@ class ClashConfigState with _$ClashConfigState {
     required bool allowLan,
     required bool ipv6,
     required bool overrideDns,
-    required String geodataLoader,
+    required GeodataLoader geodataLoader,
     required LogLevel logLevel,
-    required String externalController,
+    required ExternalControllerStatus externalController,
     required Mode mode,
     required FindProcessMode findProcessMode,
     required int keepAliveInterval,
@@ -238,10 +231,18 @@ class ClashConfigState with _$ClashConfigState {
     required HostsMap hosts,
     required Tun tun,
     required Dns dns,
-    required GeoXMap geoXUrl,
+    required GeoXUrl geoXUrl,
     required List<String> rules,
-    required String? globalRealUa,
+    required String? globalUa,
   }) = _ClashConfigState;
+}
+
+@freezed
+class DashboardState with _$DashboardState {
+  const factory DashboardState({
+    required List<DashboardWidget> dashboardWidgets,
+    required double viewWidth,
+  }) = _DashboardState;
 }
 
 @freezed

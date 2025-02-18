@@ -85,11 +85,12 @@ class _GeoDataListItemState extends State<GeoDataListItem> {
   GeoItem get geoItem => widget.geoItem;
 
   _updateUrl(String url) async {
+    final defaultMap = defaultGeoXUrl.toJson();
     final newUrl = await globalState.showCommonDialog<String>(
       child: UpdateGeoUrlFormDialog(
         title: geoItem.label,
         url: url,
-        defaultValue: defaultGeoXMap[geoItem.key],
+        defaultValue: defaultMap[geoItem.key],
       ),
     );
     if (newUrl != null && newUrl != url && mounted) {
@@ -97,9 +98,11 @@ class _GeoDataListItemState extends State<GeoDataListItem> {
         if (!newUrl.isUrl) {
           throw "Invalid url";
         }
-        final appController = globalState.appController;
-        appController.clashConfig.geoXUrl =
-            Map.from(appController.clashConfig.geoXUrl)..[geoItem.key] = newUrl;
+        final config = globalState.appController.config;
+        final map = config.patchClashConfig.geoXUrl.toJson();
+        map[geoItem.key] = newUrl;
+        config.patchClashConfig =
+            config.patchClashConfig.copyWith(geoXUrl: GeoXUrl.fromJson(map));
       } catch (e) {
         globalState.showMessage(
           title: geoItem.label,
@@ -112,7 +115,7 @@ class _GeoDataListItemState extends State<GeoDataListItem> {
   }
 
   Future<FileInfo> _getGeoFileLastModified(String fileName) async {
-    final homePath = await appPath.getHomeDirPath();
+    final homePath = await appPath.homeDirPath;
     final file = File(join(homePath, fileName));
     final lastModified = await file.lastModified();
     final size = await file.length();
@@ -183,7 +186,12 @@ class _GeoDataListItemState extends State<GeoDataListItem> {
   }
 
   _handleUpdateGeoDataItem() async {
-    await globalState.safeRun<void>(updateGeoDateItem);
+    await globalState.safeRun<void>(
+      () async {
+        await updateGeoDateItem();
+      },
+      silence: false,
+    );
     setState(() {});
   }
 
@@ -191,8 +199,10 @@ class _GeoDataListItemState extends State<GeoDataListItem> {
     isUpdating.value = true;
     try {
       final message = await clashCore.updateGeoData(
-        geoName: geoItem.fileName,
-        geoType: geoItem.label,
+        UpdateGeoDataParams(
+          geoName: geoItem.fileName,
+          geoType: geoItem.label,
+        ),
       );
       if (message.isNotEmpty) throw message;
     } catch (e) {
@@ -217,8 +227,9 @@ class _GeoDataListItemState extends State<GeoDataListItem> {
         vertical: 4,
       ),
       title: Text(geoItem.label),
-      subtitle: Selector<ClashConfig, String>(
-        selector: (_, clashConfig) => clashConfig.geoXUrl[geoItem.key]!,
+      subtitle: Selector<Config, String>(
+        selector: (_, config) =>
+            config.patchClashConfig.geoXUrl.toJson()[geoItem.key]!,
         builder: (_, value, __) {
           return _buildSubtitle(value);
         },
@@ -249,12 +260,8 @@ class UpdateGeoUrlFormDialog extends StatefulWidget {
   final String url;
   final String? defaultValue;
 
-  const UpdateGeoUrlFormDialog({
-    super.key,
-    required this.title,
-    required this.url,
-    this.defaultValue
-  });
+  const UpdateGeoUrlFormDialog(
+      {super.key, required this.title, required this.url, this.defaultValue});
 
   @override
   State<UpdateGeoUrlFormDialog> createState() => _UpdateGeoUrlFormDialogState();

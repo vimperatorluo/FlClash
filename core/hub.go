@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"core/state"
 	"encoding/json"
 	"fmt"
 	"github.com/metacubex/mihomo/adapter"
 	"github.com/metacubex/mihomo/adapter/outboundgroup"
 	"github.com/metacubex/mihomo/common/observable"
 	"github.com/metacubex/mihomo/common/utils"
+	"github.com/metacubex/mihomo/component/mmdb"
 	"github.com/metacubex/mihomo/component/updater"
 	"github.com/metacubex/mihomo/config"
 	"github.com/metacubex/mihomo/constant"
@@ -17,8 +19,10 @@ import (
 	"github.com/metacubex/mihomo/log"
 	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
+	"net"
 	"runtime"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -146,8 +150,8 @@ func handleChangeProxy(data string, fn func(string string)) {
 	}()
 }
 
-func handleGetTraffic(onlyProxy bool) string {
-	up, down := statistic.DefaultManager.Current(onlyProxy)
+func handleGetTraffic() string {
+	up, down := statistic.DefaultManager.Current(state.CurrentState.OnlyStatisticsProxy)
 	traffic := map[string]int64{
 		"up":   up,
 		"down": down,
@@ -160,8 +164,8 @@ func handleGetTraffic(onlyProxy bool) string {
 	return string(data)
 }
 
-func handleGetTotalTraffic(onlyProxy bool) string {
-	up, down := statistic.DefaultManager.Total(onlyProxy)
+func handleGetTotalTraffic() string {
+	up, down := statistic.DefaultManager.Total(state.CurrentState.OnlyStatisticsProxy)
 	traffic := map[string]int64{
 		"up":   up,
 		"down": down,
@@ -169,6 +173,15 @@ func handleGetTotalTraffic(onlyProxy bool) string {
 	data, err := json.Marshal(traffic)
 	if err != nil {
 		fmt.Println("Error:", err)
+		return ""
+	}
+	return string(data)
+}
+
+func handleGetProfile(profileId string) string {
+	prof := getRawConfigWithId(profileId)
+	data, err := json.Marshal(prof)
+	if err != nil {
 		return ""
 	}
 	return string(data)
@@ -210,7 +223,13 @@ func handleAsyncTestDelay(paramsString string, fn func(string)) {
 			return false, nil
 		}
 
-		delay, err := proxy.URLTest(ctx, constant.DefaultTestURL, expectedStatus)
+		testUrl := constant.DefaultTestURL
+
+		if params.TestUrl != "" {
+			testUrl = params.TestUrl
+		}
+
+		delay, err := proxy.URLTest(ctx, testUrl, expectedStatus)
 		if err != nil || delay == 0 {
 			delayData.Value = -1
 			data, _ := json.Marshal(delayData)
@@ -235,17 +254,6 @@ func handleGetConnections() string {
 		return ""
 	}
 	return string(data)
-}
-
-func handleCloseConnectionsUnLock() bool {
-	statistic.DefaultManager.Range(func(c statistic.Tracker) bool {
-		err := c.Close()
-		if err != nil {
-			return false
-		}
-		return true
-	})
-	return true
 }
 
 func handleCloseConnections() bool {
@@ -392,7 +400,7 @@ func handleStartLog() {
 				Type: LogMessage,
 				Data: logData,
 			}
-			SendMessage(*message)
+			sendMessage(*message)
 		}
 	}()
 }
@@ -404,9 +412,33 @@ func handleStopLog() {
 	}
 }
 
+func handleGetCountryCode(ip string, fn func(value string)) {
+	go func() {
+		runLock.Lock()
+		defer runLock.Unlock()
+		codes := mmdb.IPInstance().LookupCode(net.ParseIP(ip))
+		if len(codes) == 0 {
+			fn("")
+			return
+		}
+		fn(codes[0])
+	}()
+}
+
+func handleGetMemory(fn func(value string)) {
+	go func() {
+		fn(strconv.FormatUint(statistic.DefaultManager.Memory(), 10))
+	}()
+}
+
+func handleSetState(params string) {
+	_ = json.Unmarshal([]byte(params), state.CurrentState)
+}
+
 func init() {
-	adapter.UrlTestHook = func(name string, delay uint16) {
+	adapter.UrlTestHook = func(url string, name string, delay uint16) {
 		delayData := &Delay{
+			Url:  url,
 			Name: name,
 		}
 		if delay == 0 {
@@ -414,19 +446,19 @@ func init() {
 		} else {
 			delayData.Value = int32(delay)
 		}
-		SendMessage(Message{
+		sendMessage(Message{
 			Type: DelayMessage,
 			Data: delayData,
 		})
 	}
 	statistic.DefaultRequestNotify = func(c statistic.Tracker) {
-		SendMessage(Message{
+		sendMessage(Message{
 			Type: RequestMessage,
 			Data: c,
 		})
 	}
 	executor.DefaultProviderLoadedHook = func(providerName string) {
-		SendMessage(Message{
+		sendMessage(Message{
 			Type: LoadedMessage,
 			Data: providerName,
 		})

@@ -8,7 +8,7 @@ part of '../config.dart';
 
 Config _$ConfigFromJson(Map<String, dynamic> json) => Config()
   ..appSetting =
-      AppSetting.realFromJson(json['appSetting'] as Map<String, Object?>?)
+      AppSetting.safeFromJson(json['appSetting'] as Map<String, Object?>?)
   ..profiles = (json['profiles'] as List<dynamic>?)
           ?.map((e) => Profile.fromJson(e as Map<String, dynamic>))
           .toList() ??
@@ -32,8 +32,10 @@ Config _$ConfigFromJson(Map<String, dynamic> json) => Config()
       []
   ..proxiesStyle =
       ProxiesStyle.fromJson(json['proxiesStyle'] as Map<String, dynamic>?)
+  ..patchClashConfig = ClashConfig.safeFormJson(
+      json['patchClashConfig'] as Map<String, Object?>?)
   ..themeProps =
-      ThemeProps.realFromJson(json['themeProps'] as Map<String, Object?>?);
+      ThemeProps.safeFromJson(json['themeProps'] as Map<String, Object?>?);
 
 Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
       'appSetting': instance.appSetting,
@@ -48,13 +50,17 @@ Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
       'overrideDns': instance.overrideDns,
       'hotKeyActions': instance.hotKeyActions,
       'proxiesStyle': instance.proxiesStyle,
+      'patchClashConfig': instance.patchClashConfig,
       'themeProps': instance.themeProps,
     };
 
 _$AppSettingImpl _$$AppSettingImplFromJson(Map<String, dynamic> json) =>
     _$AppSettingImpl(
       locale: json['locale'] as String?,
-      onlyProxy: json['onlyProxy'] as bool? ?? false,
+      dashboardWidgets: json['dashboardWidgets'] == null
+          ? defaultDashboardWidgets
+          : dashboardWidgetsSafeFormJson(json['dashboardWidgets'] as List?),
+      onlyStatisticsProxy: json['onlyStatisticsProxy'] as bool? ?? false,
       autoLaunch: json['autoLaunch'] as bool? ?? false,
       silentLaunch: json['silentLaunch'] as bool? ?? false,
       autoRun: json['autoRun'] as bool? ?? false,
@@ -72,7 +78,10 @@ _$AppSettingImpl _$$AppSettingImplFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$$AppSettingImplToJson(_$AppSettingImpl instance) =>
     <String, dynamic>{
       'locale': instance.locale,
-      'onlyProxy': instance.onlyProxy,
+      'dashboardWidgets': instance.dashboardWidgets
+          .map((e) => _$DashboardWidgetEnumMap[e]!)
+          .toList(),
+      'onlyStatisticsProxy': instance.onlyStatisticsProxy,
       'autoLaunch': instance.autoLaunch,
       'silentLaunch': instance.silentLaunch,
       'autoRun': instance.autoRun,
@@ -86,6 +95,17 @@ Map<String, dynamic> _$$AppSettingImplToJson(_$AppSettingImpl instance) =>
       'minimizeOnExit': instance.minimizeOnExit,
       'hidden': instance.hidden,
     };
+
+const _$DashboardWidgetEnumMap = {
+  DashboardWidget.networkSpeed: 'networkSpeed',
+  DashboardWidget.outboundMode: 'outboundMode',
+  DashboardWidget.trafficUsage: 'trafficUsage',
+  DashboardWidget.networkDetection: 'networkDetection',
+  DashboardWidget.tunButton: 'tunButton',
+  DashboardWidget.systemProxyButton: 'systemProxyButton',
+  DashboardWidget.intranetIp: 'intranetIp',
+  DashboardWidget.memoryInfo: 'memoryInfo',
+};
 
 _$AccessControlImpl _$$AccessControlImplFromJson(Map<String, dynamic> json) =>
     _$AccessControlImpl(
@@ -146,6 +166,12 @@ _$VpnPropsImpl _$$VpnPropsImplFromJson(Map<String, dynamic> json) =>
       systemProxy: json['systemProxy'] as bool? ?? true,
       ipv6: json['ipv6'] as bool? ?? false,
       allowBypass: json['allowBypass'] as bool? ?? true,
+      routeMode: $enumDecodeNullable(_$RouteModeEnumMap, json['routeMode']) ??
+          RouteMode.bypassPrivate,
+      routeAddress: (json['route-address'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
     );
 
 Map<String, dynamic> _$$VpnPropsImplToJson(_$VpnPropsImpl instance) =>
@@ -154,7 +180,14 @@ Map<String, dynamic> _$$VpnPropsImplToJson(_$VpnPropsImpl instance) =>
       'systemProxy': instance.systemProxy,
       'ipv6': instance.ipv6,
       'allowBypass': instance.allowBypass,
+      'routeMode': _$RouteModeEnumMap[instance.routeMode]!,
+      'route-address': instance.routeAddress,
     };
+
+const _$RouteModeEnumMap = {
+  RouteMode.bypassPrivate: 'bypassPrivate',
+  RouteMode.config: 'config',
+};
 
 _$NetworkPropsImpl _$$NetworkPropsImplFromJson(Map<String, dynamic> json) =>
     _$NetworkPropsImpl(

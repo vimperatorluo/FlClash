@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_annotation_target
+
 import 'dart:math';
 
 import 'package:fl_clash/common/common.dart';
@@ -6,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'generated/common.freezed.dart';
-
 part 'generated/common.g.dart';
 
 @freezed
@@ -29,7 +30,7 @@ class Package with _$Package {
     required String packageName,
     required String label,
     required bool isSystem,
-    required int firstInstallTime,
+    required int lastUpdateTime,
   }) = _Package;
 
   factory Package.fromJson(Map<String, Object?> json) =>
@@ -69,6 +70,19 @@ class Connection with _$Connection {
       _$ConnectionFromJson(json);
 }
 
+extension ConnectionExt on Connection {
+  String get desc {
+    var text = "${metadata.network}://";
+    final ips = [
+      metadata.host,
+      metadata.destinationIP,
+    ].where((ip) => ip.isNotEmpty);
+    text += ips.join("/");
+    text += ":${metadata.destinationPort}";
+    return text;
+  }
+}
+
 @JsonSerializable()
 class Log {
   @JsonKey(name: "LogLevel")
@@ -99,42 +113,58 @@ class Log {
 }
 
 @freezed
-class LogsAndKeywords with _$LogsAndKeywords {
-  const factory LogsAndKeywords({
+class LogsState with _$LogsState {
+  const factory LogsState({
     @Default([]) List<Log> logs,
     @Default([]) List<String> keywords,
-  }) = _LogsAndKeywords;
-
-  factory LogsAndKeywords.fromJson(Map<String, Object?> json) =>
-      _$LogsAndKeywordsFromJson(json);
+    @Default("") String query,
+  }) = _LogsState;
 }
 
-extension LogsAndKeywordsExt on LogsAndKeywords {
-  List<Log> get filteredLogs => logs
-      .where(
-        (log) => {log.logLevel.name}.containsAll(keywords),
-      )
-      .toList();
+extension LogsStateExt on LogsState {
+  List<Log> get list {
+    final lowQuery = query.toLowerCase();
+    return logs.where(
+      (log) {
+        final payload = log.payload?.toLowerCase();
+        final logLevelName = log.logLevel.name;
+        return {logLevelName}.containsAll(keywords) &&
+            ((payload?.contains(lowQuery) ?? false) ||
+                logLevelName.contains(lowQuery));
+      },
+    ).toList();
+  }
 }
 
 @freezed
-class ConnectionsAndKeywords with _$ConnectionsAndKeywords {
-  const factory ConnectionsAndKeywords({
+class ConnectionsState with _$ConnectionsState {
+  const factory ConnectionsState({
     @Default([]) List<Connection> connections,
     @Default([]) List<String> keywords,
-  }) = _ConnectionsAndKeywords;
-
-  factory ConnectionsAndKeywords.fromJson(Map<String, Object?> json) =>
-      _$ConnectionsAndKeywordsFromJson(json);
+    @Default("") String query,
+  }) = _ConnectionsState;
 }
 
-extension ConnectionsAndKeywordsExt on ConnectionsAndKeywords {
-  List<Connection> get filteredConnections => connections
-      .where((connection) => {
-            ...connection.chains,
-            connection.metadata.process,
-          }.containsAll(keywords))
-      .toList();
+extension ConnectionsStateExt on ConnectionsState {
+  List<Connection> get list {
+    final lowerQuery = query.toLowerCase().trim();
+    final lowQuery = query.toLowerCase();
+    return connections.where((connection) {
+      final chains = connection.chains;
+      final process = connection.metadata.process;
+      final networkText = connection.metadata.network.toLowerCase();
+      final hostText = connection.metadata.host.toLowerCase();
+      final destinationIPText = connection.metadata.destinationIP.toLowerCase();
+      final processText = connection.metadata.process.toLowerCase();
+      final chainsText = chains.join("").toLowerCase();
+      return {...chains, process}.containsAll(keywords) &&
+          (networkText.contains(lowerQuery) ||
+              hostText.contains(lowerQuery) ||
+              destinationIPText.contains(lowQuery) ||
+              processText.contains(lowerQuery) ||
+              chainsText.contains(lowerQuery));
+    }).toList();
+  }
 }
 
 const defaultDavFileName = "backup.zip";
@@ -180,7 +210,7 @@ class Traffic {
   TrafficValue up;
   TrafficValue down;
 
-  Traffic({num? up, num? down})
+  Traffic({int? up, int? down})
       : id = DateTime.now().millisecondsSinceEpoch,
         up = TrafficValue(value: up),
         down = TrafficValue(value: down);
@@ -223,13 +253,50 @@ class TrafficValueShow {
   });
 }
 
+@freezed
+class Proxy with _$Proxy {
+  const factory Proxy({
+    required String name,
+    required String type,
+    String? now,
+  }) = _Proxy;
+
+  factory Proxy.fromJson(Map<String, Object?> json) => _$ProxyFromJson(json);
+}
+
+@freezed
+class Group with _$Group {
+  const factory Group({
+    required GroupType type,
+    @Default([]) List<Proxy> all,
+    String? now,
+    bool? hidden,
+    String? testUrl,
+    @Default("") String icon,
+    required String name,
+  }) = _Group;
+
+  factory Group.fromJson(Map<String, Object?> json) => _$GroupFromJson(json);
+}
+
+extension GroupExt on Group {
+  String get realNow => now ?? "";
+
+  String getCurrentSelectedName(String proxyName) {
+    if (type.isURLTestOrFallback) {
+      return realNow.isNotEmpty ? realNow : proxyName;
+    }
+    return proxyName.isNotEmpty ? proxyName : realNow;
+  }
+}
+
 @immutable
 class TrafficValue {
-  final num _value;
+  final int _value;
 
-  const TrafficValue({num? value}) : _value = value ?? 0;
+  const TrafficValue({int? value}) : _value = value ?? 0;
 
-  num get value => _value;
+  int get value => _value;
 
   String get show => "$showValue $showUnit";
 
@@ -238,23 +305,23 @@ class TrafficValue {
   String get showUnit => trafficValueShow.unit.name;
 
   TrafficValueShow get trafficValueShow {
-    if (_value > pow(1024, 4)) {
+    if (_value > pow(1024, 4) / 2) {
       return TrafficValueShow(
         value: (_value / pow(1024, 4)).fixed(),
         unit: TrafficUnit.TB,
       );
     }
-    if (_value > pow(1024, 3)) {
+    if (_value > pow(1024, 3) / 2) {
       return TrafficValueShow(
         value: (_value / pow(1024, 3)).fixed(),
         unit: TrafficUnit.GB,
       );
     }
-    if (_value > pow(1024, 2)) {
+    if (_value > pow(1024, 2) / 2) {
       return TrafficValueShow(
           value: (_value / pow(1024, 2)).fixed(), unit: TrafficUnit.MB);
     }
-    if (_value > pow(1024, 1)) {
+    if (_value > pow(1024, 1) / 2) {
       return TrafficValueShow(
         value: (_value / pow(1024, 1)).fixed(),
         unit: TrafficUnit.KB,
@@ -282,44 +349,6 @@ class TrafficValue {
   int get hashCode => _value.hashCode;
 }
 
-typedef ProxyMap = Map<String, Proxy>;
-
-@freezed
-class Group with _$Group {
-  const factory Group({
-    required GroupType type,
-    @Default([]) List<Proxy> all,
-    String? now,
-    bool? hidden,
-    @Default("") String icon,
-    required String name,
-  }) = _Group;
-
-  factory Group.fromJson(Map<String, Object?> json) => _$GroupFromJson(json);
-}
-
-extension GroupExt on Group {
-  String get realNow => now ?? "";
-
-  String getCurrentSelectedName(String proxyName) {
-    if (type.isURLTestOrFallback) {
-      return realNow.isNotEmpty ? realNow : proxyName;
-    }
-    return proxyName.isNotEmpty ? proxyName : realNow;
-  }
-}
-
-@freezed
-class Proxy with _$Proxy {
-  const factory Proxy({
-    required String name,
-    required String type,
-    String? now,
-  }) = _Proxy;
-
-  factory Proxy.fromJson(Map<String, Object?> json) => _$ProxyFromJson(json);
-}
-
 @immutable
 class SystemColorSchemes {
   final ColorScheme? lightColorScheme;
@@ -343,7 +372,7 @@ class SystemColorSchemes {
             );
     }
     return lightColorScheme != null
-        ? ColorScheme.fromSeed(seedColor: darkColorScheme!.primary)
+        ? ColorScheme.fromSeed(seedColor: lightColorScheme!.primary)
         : ColorScheme.fromSeed(seedColor: defaultPrimaryColor);
   }
 }
@@ -440,4 +469,25 @@ class Field with _$Field {
     required String value,
     Validator? validator,
   }) = _Field;
+}
+
+enum ActionType {
+  primary,
+  danger,
+}
+
+class ActionItemData {
+  const ActionItemData({
+    this.icon,
+    required this.label,
+    required this.onPressed,
+    this.type,
+    this.iconSize,
+  });
+
+  final double? iconSize;
+  final String label;
+  final VoidCallback onPressed;
+  final IconData? icon;
+  final ActionType? type;
 }

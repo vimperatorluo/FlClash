@@ -40,8 +40,8 @@ class TUNItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.tun.enable,
+    return Selector<Config, bool>(
+      selector: (_, config) => config.patchClashConfig.tun.enable,
       builder: (_, enable, __) {
         return ListItem.switchItem(
           title: Text(appLocalizations.tun),
@@ -49,8 +49,8 @@ class TUNItem extends StatelessWidget {
           delegate: SwitchDelegate(
             value: enable,
             onChanged: (value) async {
-              final clashConfig = globalState.appController.clashConfig;
-              clashConfig.tun = clashConfig.tun.copyWith(
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith.tun(
                 enable: value,
               );
             },
@@ -174,8 +174,8 @@ class TunStackItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, TunStack>(
-      selector: (_, clashConfig) => clashConfig.tun.stack,
+    return Selector<Config, TunStack>(
+      selector: (_, config) => config.patchClashConfig.tun.stack,
       builder: (_, stack, __) {
         return ListItem.options(
           title: Text(appLocalizations.stackMode),
@@ -188,8 +188,8 @@ class TunStackItem extends StatelessWidget {
               if (value == null) {
                 return;
               }
-              final clashConfig = globalState.appController.clashConfig;
-              clashConfig.tun = clashConfig.tun.copyWith(
+              final config = globalState.appController.config;
+              config.patchClashConfig = config.patchClashConfig.copyWith.tun(
                 stack: value,
               );
             },
@@ -206,23 +206,21 @@ class BypassDomainItem extends StatelessWidget {
 
   _initActions(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      final commonScaffoldState =
-          context.findAncestorStateOfType<CommonScaffoldState>();
-      commonScaffoldState?.actions = [
+      context.commonScaffoldState?.actions = [
         IconButton(
-          onPressed: () {
-            globalState.showMessage(
+          onPressed: () async {
+            final res = await globalState.showMessage(
               title: appLocalizations.reset,
               message: TextSpan(
                 text: appLocalizations.resetTip,
               ),
-              onTab: () {
-                final config = globalState.appController.config;
-                config.networkProps = config.networkProps.copyWith(
-                  bypassDomain: defaultBypassDomain,
-                );
-                Navigator.of(context).pop();
-              },
+            );
+            if (res != true) {
+              return;
+            }
+            final config = globalState.appController.config;
+            config.networkProps = config.networkProps.copyWith(
+              bypassDomain: defaultBypassDomain,
             );
           },
           tooltip: appLocalizations.reset,
@@ -272,8 +270,8 @@ class RouteModeItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, RouteMode>(
-      selector: (_, clashConfig) => clashConfig.routeMode,
+    return Selector<Config, RouteMode>(
+      selector: (_, config) => config.vpnProps.routeMode,
       builder: (_, value, __) {
         return ListItem<RouteMode>.options(
           title: Text(appLocalizations.routeMode),
@@ -285,8 +283,10 @@ class RouteModeItem extends StatelessWidget {
               if (value == null) {
                 return;
               }
-              final appController = globalState.appController;
-              appController.clashConfig.routeMode = value;
+              final config = globalState.appController.config;
+              config.vpnProps = config.vpnProps.copyWith(
+                routeMode: value,
+              );
             },
             textBuilder: (routeMode) => Intl.message(
               "routeMode_${routeMode.name}",
@@ -304,8 +304,8 @@ class RouteAddressItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<ClashConfig, bool>(
-      selector: (_, clashConfig) => clashConfig.routeMode == RouteMode.config,
+    return Selector<Config, bool>(
+      selector: (_, config) => config.vpnProps.routeMode == RouteMode.config,
       builder: (_, value, child) {
         if (value) {
           return child!;
@@ -319,8 +319,8 @@ class RouteAddressItem extends StatelessWidget {
           isBlur: false,
           isScaffold: true,
           title: appLocalizations.routeAddress,
-          widget: Selector<ClashConfig, List<String>>(
-            selector: (_, clashConfig) => clashConfig.includeRouteAddress,
+          widget: Selector<Config, List<String>>(
+            selector: (_, config) => config.vpnProps.routeAddress,
             shouldRebuild: (prev, next) =>
                 !stringListEquality.equals(prev, next),
             builder: (context, routeAddress, __) {
@@ -329,9 +329,10 @@ class RouteAddressItem extends StatelessWidget {
                 items: routeAddress,
                 titleBuilder: (item) => Text(item),
                 onChange: (items) {
-                  final clashConfig = globalState.appController.clashConfig;
-                  clashConfig.includeRouteAddress =
-                      Set<String>.from(items).toList();
+                  final config = globalState.appController.config;
+                  config.vpnProps = config.vpnProps.copyWith(
+                    routeAddress: Set<String>.from(items).toList(),
+                  );
                 },
               );
             },
@@ -349,7 +350,7 @@ final networkItems = [
     ...generateSection(
       title: "VPN",
       items: [
-        const SystemProxyItem(),
+        const VpnSystemProxyItem(),
         const AllowBypassItem(),
         const Ipv6Item(),
       ],
@@ -367,8 +368,10 @@ final networkItems = [
     items: [
       if (system.isDesktop) const TUNItem(),
       const TunStackItem(),
-      const RouteModeItem(),
-      const RouteAddressItem(),
+      if (Platform.isAndroid) ...[
+        const RouteModeItem(),
+        const RouteAddressItem(),
+      ]
     ],
   ),
 ];
@@ -378,22 +381,23 @@ class NetworkListView extends StatelessWidget {
 
   _initActions(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      final commonScaffoldState =
-          context.findAncestorStateOfType<CommonScaffoldState>();
-      commonScaffoldState?.actions = [
+      context.commonScaffoldState?.actions = [
         IconButton(
-          onPressed: () {
-            globalState.showMessage(
+          onPressed: () async {
+            final res = await globalState.showMessage(
               title: appLocalizations.reset,
               message: TextSpan(
                 text: appLocalizations.resetTip,
               ),
-              onTab: () {
-                final appController = globalState.appController;
-                appController.config.vpnProps = defaultVpnProps;
-                appController.clashConfig.tun = defaultTun;
-                Navigator.of(context).pop();
-              },
+            );
+            if (res != true) {
+              return;
+            }
+            final appController = globalState.appController;
+            appController.config.vpnProps = defaultVpnProps;
+            final config = globalState.appController.config;
+            config.patchClashConfig = config.patchClashConfig.copyWith(
+              tun: defaultTun,
             );
           },
           tooltip: appLocalizations.reset,

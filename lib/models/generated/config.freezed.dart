@@ -21,7 +21,10 @@ AppSetting _$AppSettingFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$AppSetting {
   String? get locale => throw _privateConstructorUsedError;
-  bool get onlyProxy => throw _privateConstructorUsedError;
+  @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+  List<DashboardWidget> get dashboardWidgets =>
+      throw _privateConstructorUsedError;
+  bool get onlyStatisticsProxy => throw _privateConstructorUsedError;
   bool get autoLaunch => throw _privateConstructorUsedError;
   bool get silentLaunch => throw _privateConstructorUsedError;
   bool get autoRun => throw _privateConstructorUsedError;
@@ -53,7 +56,9 @@ abstract class $AppSettingCopyWith<$Res> {
   @useResult
   $Res call(
       {String? locale,
-      bool onlyProxy,
+      @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+      List<DashboardWidget> dashboardWidgets,
+      bool onlyStatisticsProxy,
       bool autoLaunch,
       bool silentLaunch,
       bool autoRun,
@@ -84,7 +89,8 @@ class _$AppSettingCopyWithImpl<$Res, $Val extends AppSetting>
   @override
   $Res call({
     Object? locale = freezed,
-    Object? onlyProxy = null,
+    Object? dashboardWidgets = null,
+    Object? onlyStatisticsProxy = null,
     Object? autoLaunch = null,
     Object? silentLaunch = null,
     Object? autoRun = null,
@@ -103,9 +109,13 @@ class _$AppSettingCopyWithImpl<$Res, $Val extends AppSetting>
           ? _value.locale
           : locale // ignore: cast_nullable_to_non_nullable
               as String?,
-      onlyProxy: null == onlyProxy
-          ? _value.onlyProxy
-          : onlyProxy // ignore: cast_nullable_to_non_nullable
+      dashboardWidgets: null == dashboardWidgets
+          ? _value.dashboardWidgets
+          : dashboardWidgets // ignore: cast_nullable_to_non_nullable
+              as List<DashboardWidget>,
+      onlyStatisticsProxy: null == onlyStatisticsProxy
+          ? _value.onlyStatisticsProxy
+          : onlyStatisticsProxy // ignore: cast_nullable_to_non_nullable
               as bool,
       autoLaunch: null == autoLaunch
           ? _value.autoLaunch
@@ -169,7 +179,9 @@ abstract class _$$AppSettingImplCopyWith<$Res>
   @useResult
   $Res call(
       {String? locale,
-      bool onlyProxy,
+      @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+      List<DashboardWidget> dashboardWidgets,
+      bool onlyStatisticsProxy,
       bool autoLaunch,
       bool silentLaunch,
       bool autoRun,
@@ -198,7 +210,8 @@ class __$$AppSettingImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? locale = freezed,
-    Object? onlyProxy = null,
+    Object? dashboardWidgets = null,
+    Object? onlyStatisticsProxy = null,
     Object? autoLaunch = null,
     Object? silentLaunch = null,
     Object? autoRun = null,
@@ -217,9 +230,13 @@ class __$$AppSettingImplCopyWithImpl<$Res>
           ? _value.locale
           : locale // ignore: cast_nullable_to_non_nullable
               as String?,
-      onlyProxy: null == onlyProxy
-          ? _value.onlyProxy
-          : onlyProxy // ignore: cast_nullable_to_non_nullable
+      dashboardWidgets: null == dashboardWidgets
+          ? _value._dashboardWidgets
+          : dashboardWidgets // ignore: cast_nullable_to_non_nullable
+              as List<DashboardWidget>,
+      onlyStatisticsProxy: null == onlyStatisticsProxy
+          ? _value.onlyStatisticsProxy
+          : onlyStatisticsProxy // ignore: cast_nullable_to_non_nullable
               as bool,
       autoLaunch: null == autoLaunch
           ? _value.autoLaunch
@@ -278,7 +295,9 @@ class __$$AppSettingImplCopyWithImpl<$Res>
 class _$AppSettingImpl implements _AppSetting {
   const _$AppSettingImpl(
       {this.locale,
-      this.onlyProxy = false,
+      @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+      final List<DashboardWidget> dashboardWidgets = defaultDashboardWidgets,
+      this.onlyStatisticsProxy = false,
       this.autoLaunch = false,
       this.silentLaunch = false,
       this.autoRun = false,
@@ -290,16 +309,27 @@ class _$AppSettingImpl implements _AppSetting {
       this.showLabel = false,
       this.disclaimerAccepted = false,
       this.minimizeOnExit = true,
-      this.hidden = false});
+      this.hidden = false})
+      : _dashboardWidgets = dashboardWidgets;
 
   factory _$AppSettingImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppSettingImplFromJson(json);
 
   @override
   final String? locale;
+  final List<DashboardWidget> _dashboardWidgets;
+  @override
+  @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+  List<DashboardWidget> get dashboardWidgets {
+    if (_dashboardWidgets is EqualUnmodifiableListView)
+      return _dashboardWidgets;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_dashboardWidgets);
+  }
+
   @override
   @JsonKey()
-  final bool onlyProxy;
+  final bool onlyStatisticsProxy;
   @override
   @JsonKey()
   final bool autoLaunch;
@@ -339,7 +369,7 @@ class _$AppSettingImpl implements _AppSetting {
 
   @override
   String toString() {
-    return 'AppSetting(locale: $locale, onlyProxy: $onlyProxy, autoLaunch: $autoLaunch, silentLaunch: $silentLaunch, autoRun: $autoRun, openLogs: $openLogs, closeConnections: $closeConnections, testUrl: $testUrl, isAnimateToPage: $isAnimateToPage, autoCheckUpdate: $autoCheckUpdate, showLabel: $showLabel, disclaimerAccepted: $disclaimerAccepted, minimizeOnExit: $minimizeOnExit, hidden: $hidden)';
+    return 'AppSetting(locale: $locale, dashboardWidgets: $dashboardWidgets, onlyStatisticsProxy: $onlyStatisticsProxy, autoLaunch: $autoLaunch, silentLaunch: $silentLaunch, autoRun: $autoRun, openLogs: $openLogs, closeConnections: $closeConnections, testUrl: $testUrl, isAnimateToPage: $isAnimateToPage, autoCheckUpdate: $autoCheckUpdate, showLabel: $showLabel, disclaimerAccepted: $disclaimerAccepted, minimizeOnExit: $minimizeOnExit, hidden: $hidden)';
   }
 
   @override
@@ -348,8 +378,10 @@ class _$AppSettingImpl implements _AppSetting {
         (other.runtimeType == runtimeType &&
             other is _$AppSettingImpl &&
             (identical(other.locale, locale) || other.locale == locale) &&
-            (identical(other.onlyProxy, onlyProxy) ||
-                other.onlyProxy == onlyProxy) &&
+            const DeepCollectionEquality()
+                .equals(other._dashboardWidgets, _dashboardWidgets) &&
+            (identical(other.onlyStatisticsProxy, onlyStatisticsProxy) ||
+                other.onlyStatisticsProxy == onlyStatisticsProxy) &&
             (identical(other.autoLaunch, autoLaunch) ||
                 other.autoLaunch == autoLaunch) &&
             (identical(other.silentLaunch, silentLaunch) ||
@@ -378,7 +410,8 @@ class _$AppSettingImpl implements _AppSetting {
   int get hashCode => Object.hash(
       runtimeType,
       locale,
-      onlyProxy,
+      const DeepCollectionEquality().hash(_dashboardWidgets),
+      onlyStatisticsProxy,
       autoLaunch,
       silentLaunch,
       autoRun,
@@ -411,7 +444,9 @@ class _$AppSettingImpl implements _AppSetting {
 abstract class _AppSetting implements AppSetting {
   const factory _AppSetting(
       {final String? locale,
-      final bool onlyProxy,
+      @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+      final List<DashboardWidget> dashboardWidgets,
+      final bool onlyStatisticsProxy,
       final bool autoLaunch,
       final bool silentLaunch,
       final bool autoRun,
@@ -431,7 +466,10 @@ abstract class _AppSetting implements AppSetting {
   @override
   String? get locale;
   @override
-  bool get onlyProxy;
+  @JsonKey(fromJson: dashboardWidgetsSafeFormJson)
+  List<DashboardWidget> get dashboardWidgets;
+  @override
+  bool get onlyStatisticsProxy;
   @override
   bool get autoLaunch;
   @override
@@ -940,6 +978,9 @@ mixin _$VpnProps {
   bool get systemProxy => throw _privateConstructorUsedError;
   bool get ipv6 => throw _privateConstructorUsedError;
   bool get allowBypass => throw _privateConstructorUsedError;
+  RouteMode get routeMode => throw _privateConstructorUsedError;
+  @JsonKey(name: "route-address")
+  List<String> get routeAddress => throw _privateConstructorUsedError;
 
   /// Serializes this VpnProps to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -956,7 +997,13 @@ abstract class $VpnPropsCopyWith<$Res> {
   factory $VpnPropsCopyWith(VpnProps value, $Res Function(VpnProps) then) =
       _$VpnPropsCopyWithImpl<$Res, VpnProps>;
   @useResult
-  $Res call({bool enable, bool systemProxy, bool ipv6, bool allowBypass});
+  $Res call(
+      {bool enable,
+      bool systemProxy,
+      bool ipv6,
+      bool allowBypass,
+      RouteMode routeMode,
+      @JsonKey(name: "route-address") List<String> routeAddress});
 }
 
 /// @nodoc
@@ -978,6 +1025,8 @@ class _$VpnPropsCopyWithImpl<$Res, $Val extends VpnProps>
     Object? systemProxy = null,
     Object? ipv6 = null,
     Object? allowBypass = null,
+    Object? routeMode = null,
+    Object? routeAddress = null,
   }) {
     return _then(_value.copyWith(
       enable: null == enable
@@ -996,6 +1045,14 @@ class _$VpnPropsCopyWithImpl<$Res, $Val extends VpnProps>
           ? _value.allowBypass
           : allowBypass // ignore: cast_nullable_to_non_nullable
               as bool,
+      routeMode: null == routeMode
+          ? _value.routeMode
+          : routeMode // ignore: cast_nullable_to_non_nullable
+              as RouteMode,
+      routeAddress: null == routeAddress
+          ? _value.routeAddress
+          : routeAddress // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ) as $Val);
   }
 }
@@ -1008,7 +1065,13 @@ abstract class _$$VpnPropsImplCopyWith<$Res>
       __$$VpnPropsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({bool enable, bool systemProxy, bool ipv6, bool allowBypass});
+  $Res call(
+      {bool enable,
+      bool systemProxy,
+      bool ipv6,
+      bool allowBypass,
+      RouteMode routeMode,
+      @JsonKey(name: "route-address") List<String> routeAddress});
 }
 
 /// @nodoc
@@ -1028,6 +1091,8 @@ class __$$VpnPropsImplCopyWithImpl<$Res>
     Object? systemProxy = null,
     Object? ipv6 = null,
     Object? allowBypass = null,
+    Object? routeMode = null,
+    Object? routeAddress = null,
   }) {
     return _then(_$VpnPropsImpl(
       enable: null == enable
@@ -1046,6 +1111,14 @@ class __$$VpnPropsImplCopyWithImpl<$Res>
           ? _value.allowBypass
           : allowBypass // ignore: cast_nullable_to_non_nullable
               as bool,
+      routeMode: null == routeMode
+          ? _value.routeMode
+          : routeMode // ignore: cast_nullable_to_non_nullable
+              as RouteMode,
+      routeAddress: null == routeAddress
+          ? _value._routeAddress
+          : routeAddress // ignore: cast_nullable_to_non_nullable
+              as List<String>,
     ));
   }
 }
@@ -1057,7 +1130,11 @@ class _$VpnPropsImpl implements _VpnProps {
       {this.enable = true,
       this.systemProxy = true,
       this.ipv6 = false,
-      this.allowBypass = true});
+      this.allowBypass = true,
+      this.routeMode = RouteMode.bypassPrivate,
+      @JsonKey(name: "route-address")
+      final List<String> routeAddress = const []})
+      : _routeAddress = routeAddress;
 
   factory _$VpnPropsImpl.fromJson(Map<String, dynamic> json) =>
       _$$VpnPropsImplFromJson(json);
@@ -1074,10 +1151,21 @@ class _$VpnPropsImpl implements _VpnProps {
   @override
   @JsonKey()
   final bool allowBypass;
+  @override
+  @JsonKey()
+  final RouteMode routeMode;
+  final List<String> _routeAddress;
+  @override
+  @JsonKey(name: "route-address")
+  List<String> get routeAddress {
+    if (_routeAddress is EqualUnmodifiableListView) return _routeAddress;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_routeAddress);
+  }
 
   @override
   String toString() {
-    return 'VpnProps(enable: $enable, systemProxy: $systemProxy, ipv6: $ipv6, allowBypass: $allowBypass)';
+    return 'VpnProps(enable: $enable, systemProxy: $systemProxy, ipv6: $ipv6, allowBypass: $allowBypass, routeMode: $routeMode, routeAddress: $routeAddress)';
   }
 
   @override
@@ -1090,13 +1178,23 @@ class _$VpnPropsImpl implements _VpnProps {
                 other.systemProxy == systemProxy) &&
             (identical(other.ipv6, ipv6) || other.ipv6 == ipv6) &&
             (identical(other.allowBypass, allowBypass) ||
-                other.allowBypass == allowBypass));
+                other.allowBypass == allowBypass) &&
+            (identical(other.routeMode, routeMode) ||
+                other.routeMode == routeMode) &&
+            const DeepCollectionEquality()
+                .equals(other._routeAddress, _routeAddress));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, enable, systemProxy, ipv6, allowBypass);
+  int get hashCode => Object.hash(
+      runtimeType,
+      enable,
+      systemProxy,
+      ipv6,
+      allowBypass,
+      routeMode,
+      const DeepCollectionEquality().hash(_routeAddress));
 
   /// Create a copy of VpnProps
   /// with the given fields replaced by the non-null parameter values.
@@ -1116,10 +1214,13 @@ class _$VpnPropsImpl implements _VpnProps {
 
 abstract class _VpnProps implements VpnProps {
   const factory _VpnProps(
-      {final bool enable,
-      final bool systemProxy,
-      final bool ipv6,
-      final bool allowBypass}) = _$VpnPropsImpl;
+          {final bool enable,
+          final bool systemProxy,
+          final bool ipv6,
+          final bool allowBypass,
+          final RouteMode routeMode,
+          @JsonKey(name: "route-address") final List<String> routeAddress}) =
+      _$VpnPropsImpl;
 
   factory _VpnProps.fromJson(Map<String, dynamic> json) =
       _$VpnPropsImpl.fromJson;
@@ -1132,6 +1233,11 @@ abstract class _VpnProps implements VpnProps {
   bool get ipv6;
   @override
   bool get allowBypass;
+  @override
+  RouteMode get routeMode;
+  @override
+  @JsonKey(name: "route-address")
+  List<String> get routeAddress;
 
   /// Create a copy of VpnProps
   /// with the given fields replaced by the non-null parameter values.

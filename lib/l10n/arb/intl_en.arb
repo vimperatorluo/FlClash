@@ -332,5 +332,15 @@
   "routeAddress": "Route address",
   "routeAddressDesc": "Config listen route address",
   "pleaseInputAdminPassword": "Please enter the admin password",
-  "copyEnvVar": "Copying environment variables"
+  "copyEnvVar": "Copying environment variables",
+  "memoryInfo": "Memory info",
+  "cancel": "Cancel",
+  "fileIsUpdate": "The file has been modified. Do you want to save the changes?",
+  "profileHasUpdate": "The profile has been modified. Do you want to disable auto update?",
+  "hasCacheChange": "Do you want to cache the changes?",
+  "nullProxies": "No proxies",
+  "copySuccess": "Copy success",
+  "copyLink": "Copy link",
+  "exportFile": "Export file",
+  "cacheCorrupt": "The cache is corrupt. Do you want to clear it?"
 }

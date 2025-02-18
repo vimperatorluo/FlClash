@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
@@ -29,7 +30,7 @@ class Request {
           url,
           options: Options(
             headers: {
-              "User-Agent": globalState.appController.clashConfig.globalUa
+              "User-Agent": globalState.appController.config.patchClashConfig.globalUa
             },
             responseType: ResponseType.bytes,
           ),
@@ -70,28 +71,35 @@ class Request {
     return data;
   }
 
-  final Map<String, IpInfo Function(Map<String, dynamic>)> _ipInfoSources = {
-    "https://ipwho.is/": IpInfo.fromIpwhoIsJson,
-    "https://api.ip.sb/geoip/": IpInfo.fromIpSbJson,
-    "https://ipapi.co/json/": IpInfo.fromIpApiCoJson,
-    "https://ipinfo.io/json/": IpInfo.fromIpInfoIoJson,
-  };
+  final List<String> _ipInfoSources = [
+    "https://api.ipify.org",
+    "https://ipwho.is/?fields=ip&output=csv",
+    "https://ipinfo.io/ip",
+    "https://ifconfig.me/ip/",
+  ];
 
   Future<IpInfo?> checkIp({CancelToken? cancelToken}) async {
-    for (final source in _ipInfoSources.entries) {
+    for (final source in _ipInfoSources) {
       try {
         final response = await _dio
-            .get<Map<String, dynamic>>(source.key, cancelToken: cancelToken)
+            .get<String>(
+              source,
+              cancelToken: cancelToken,
+            )
             .timeout(httpTimeoutDuration);
         if (response.statusCode != 200 || response.data == null) {
           continue;
         }
-        return source.value(response.data!);
+        final ipInfo = await clashCore.getCountryCode(response.data!);
+        if (ipInfo == null && source != _ipInfoSources.last) {
+          continue;
+        }
+        return ipInfo;
       } catch (e) {
+        commonPrint.log("checkIp error ===> $e");
         if (e is DioException && e.type == DioExceptionType.cancel) {
           throw "cancelled";
         }
-        debugPrint("checkIp error ===> $e");
       }
     }
     return null;

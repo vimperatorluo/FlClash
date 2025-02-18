@@ -1,26 +1,69 @@
 import 'dart:async';
 
 class Debouncer {
-  final Duration delay;
-  Timer? _timer;
+  final Map<dynamic, Timer> _operations = {};
 
-  Debouncer({required this.delay});
+  call(
+    dynamic tag,
+    Function func, {
+    List<dynamic>? args,
+    Duration duration = const Duration(milliseconds: 600),
+  }) {
+    final timer = _operations[tag];
+    if (timer != null) {
+      timer.cancel();
+    }
+    _operations[tag] = Timer(
+      duration,
+      () {
+        _operations[tag]?.cancel();
+        _operations.remove(tag);
+        Function.apply(
+          func,
+          args,
+        );
+      },
+    );
+  }
 
-  void call(Function action, List<dynamic> positionalArguments, [Map<Symbol, dynamic>? namedArguments]) {
-    _timer?.cancel();
-    _timer = Timer(delay, () => Function.apply(action, positionalArguments, namedArguments));
+  cancel(dynamic tag) {
+    _operations[tag]?.cancel();
   }
 }
 
-Function debounce<F extends Function>(F func,{int milliseconds = 600}) {
-  Timer? timer;
+class Throttler {
+  final Map<dynamic, Timer> _operations = {};
 
-  return ([List<dynamic>? args, Map<Symbol, dynamic>? namedArgs]) {
+  call(
+    String tag,
+    Function func, {
+    List<dynamic>? args,
+    Duration duration = const Duration(milliseconds: 600),
+  }) {
+    final timer = _operations[tag];
     if (timer != null) {
-      timer!.cancel();
+      return true;
     }
-    timer = Timer(Duration(milliseconds: milliseconds), () async {
-      await Function.apply(func, args ?? [], namedArgs);
-    });
-  };
+    _operations[tag] = Timer(
+      duration,
+      () {
+        _operations[tag]?.cancel();
+        _operations.remove(tag);
+        Function.apply(
+          func,
+          args,
+        );
+      },
+    );
+    return false;
+  }
+
+  cancel(dynamic tag) {
+    _operations[tag]?.cancel();
+  }
 }
+
+
+final debouncer = Debouncer();
+
+final throttler = Throttler();

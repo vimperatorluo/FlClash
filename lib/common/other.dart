@@ -1,15 +1,11 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
 import 'package:lpinyin/lpinyin.dart';
-import 'package:zxing2/qrcode.dart';
 
 class Other {
   Color? getDelayColor(int? delay) {
@@ -32,6 +28,39 @@ class Other {
     return valueRaw.substring(
       valueRaw.length - 2,
     );
+  }
+
+  String generateRandomString({int minLength = 10, int maxLength = 100}) {
+    const latinChars =
+        'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    final random = Random();
+
+    int length = minLength + random.nextInt(maxLength - minLength + 1);
+
+    String result = '';
+    for (int i = 0; i < length; i++) {
+      if (random.nextBool()) {
+        result +=
+            String.fromCharCode(0x4E00 + random.nextInt(0x9FA5 - 0x4E00 + 1));
+      } else {
+        result += latinChars[random.nextInt(latinChars.length)];
+      }
+    }
+
+    return result;
+  }
+
+  String get uuidV4 {
+    final Random random = Random();
+    final bytes = List.generate(16, (_) => random.nextInt(256));
+
+    bytes[6] = (bytes[6] & 0x0F) | 0x40;
+    bytes[8] = (bytes[8] & 0x3F) | 0x80;
+
+    final hex =
+        bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
   }
 
   String getTimeDifference(DateTime dateTime) {
@@ -152,30 +181,6 @@ class Other {
         : "";
   }
 
-  Future<String?> parseQRCode(Uint8List? bytes) {
-    return Isolate.run<String?>(() {
-      if (bytes == null) return null;
-      img.Image? image = img.decodeImage(bytes);
-      LuminanceSource source = RGBLuminanceSource(
-        image!.width,
-        image.height,
-        image
-            .convert(numChannels: 4)
-            .getBytes(order: img.ChannelOrder.abgr)
-            .buffer
-            .asInt32List(),
-      );
-      final bitmap = BinaryBitmap(GlobalHistogramBinarizer(source));
-      final reader = QRCodeReader();
-      try {
-        final result = reader.decode(bitmap);
-        return result.text;
-      } catch (_) {
-        return null;
-      }
-    });
-  }
-
   String? getFileNameForDisposition(String? disposition) {
     if (disposition == null) return null;
     final parseValue = HeaderValue.parse(disposition);
@@ -225,7 +230,7 @@ class Other {
   }
 
   int getProfilesColumns(double viewWidth) {
-    return max((viewWidth / 400).floor(), 1);
+    return max((viewWidth / 350).floor(), 1);
   }
 
   String getBackupFileName() {
@@ -239,6 +244,32 @@ class Other {
   Size getScreenSize() {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
     return view.physicalSize / view.devicePixelRatio;
+  }
+
+  Future<String?> getLocalIpAddress() async {
+    List<NetworkInterface> interfaces = await NetworkInterface.list(
+      includeLoopback: false,
+    )
+      ..sort((a, b) {
+        if (a.isWifi && !b.isWifi) return -1;
+        if (!a.isWifi && b.isWifi) return 1;
+        if (a.includesIPv4 && !b.includesIPv4) return -1;
+        if (!a.includesIPv4 && b.includesIPv4) return 1;
+        return 0;
+      });
+    for (final interface in interfaces) {
+      final addresses = interface.addresses;
+      if (addresses.isEmpty) {
+        continue;
+      }
+      addresses.sort((a, b) {
+        if (a.isIPv4 && !b.isIPv4) return -1;
+        if (!a.isIPv4 && b.isIPv4) return 1;
+        return 0;
+      });
+      return addresses.first.address;
+    }
+    return "";
   }
 }
 

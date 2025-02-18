@@ -65,10 +65,10 @@ class _ProxiesListFragmentState extends State<ProxiesListFragment> {
 
   @override
   void dispose() {
-    super.dispose();
     _headerStateNotifier.dispose();
     _controller.removeListener(_adjustHeader);
     _controller.dispose();
+    super.dispose();
   }
 
   _handleChange(Set<String> currentUnfoldSet, String groupName) {
@@ -134,6 +134,7 @@ class _ProxiesListFragmentState extends State<ProxiesListFragment> {
       if (isExpand) {
         final sortedProxies = globalState.appController.getSortProxies(
           group.all,
+          group.testUrl,
         );
         groupNameProxiesMap[groupName] = sortedProxies;
         final chunks = sortedProxies.chunks(columns);
@@ -142,6 +143,7 @@ class _ProxiesListFragmentState extends State<ProxiesListFragment> {
               .map<Widget>(
                 (proxy) => Flexible(
                   child: ProxyCard(
+                    testUrl: group.testUrl,
                     type: type,
                     groupType: group.type,
                     key: ValueKey('$groupName.${proxy.name}'),
@@ -259,6 +261,11 @@ class _ProxiesListFragmentState extends State<ProxiesListFragment> {
         return prev != next;
       },
       builder: (_, state, __) {
+        if (state.groupNames.isEmpty) {
+          return NullStatus(
+            label: appLocalizations.nullProxies,
+          );
+        }
         final items = _buildItems(
           groupNames: state.groupNames,
           currentUnfoldSet: state.currentUnfoldSet,
@@ -266,13 +273,8 @@ class _ProxiesListFragmentState extends State<ProxiesListFragment> {
           type: state.proxyCardType,
         );
         final itemsOffset = _getItemHeightList(items, state.proxyCardType);
-        return Scrollbar(
+        return CommonScrollBar(
           controller: _controller,
-          thumbVisibility: true,
-          trackVisibility: true,
-          thickness: 8,
-          radius: const Radius.circular(8),
-          interactive: true,
           child: Stack(
             children: [
               Positioned.fill(
@@ -367,10 +369,13 @@ class _ListHeaderState extends State<ListHeader>
 
   bool get isExpand => widget.isExpand;
 
-  _delayTest(List<Proxy> proxies) async {
+  _delayTest() async {
     if (isLock) return;
     isLock = true;
-    await delayTest(proxies);
+    await delayTest(
+      widget.group.all,
+      widget.group.testUrl,
+    );
     isLock = false;
   }
 
@@ -442,10 +447,10 @@ class _ListHeaderState extends State<ListHeader>
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: context.colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: CommonIcon(
+                  child: CommonTargetIcon(
                     src: icon,
                     size: 32,
                   ),
@@ -454,7 +459,7 @@ class _ListHeaderState extends State<ListHeader>
                   margin: const EdgeInsets.only(
                     right: 16,
                   ),
-                  child: CommonIcon(
+                  child: CommonTargetIcon(
                     src: icon,
                     size: 42,
                   ),
@@ -471,7 +476,10 @@ class _ListHeaderState extends State<ListHeader>
   Widget build(BuildContext context) {
     return CommonCard(
       key: widget.key,
-      radius: 18,
+      backgroundColor: WidgetStatePropertyAll(
+        context.colorScheme.surfaceContainer,
+      ),
+      radius: 14,
       type: CommonCardType.filled,
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -560,9 +568,7 @@ class _ListHeaderState extends State<ListHeader>
                     ),
                   ),
                   IconButton(
-                    onPressed: () {
-                      _delayTest(widget.group.all);
-                    },
+                    onPressed: _delayTest,
                     icon: const Icon(
                       Icons.network_ping,
                     ),

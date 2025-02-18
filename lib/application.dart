@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:animations/animations.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/common/common.dart';
@@ -22,23 +21,19 @@ runAppWithPreferences(
   required AppState appState,
   required Config config,
   required AppFlowingState appFlowingState,
-  required ClashConfig clashConfig,
 }) {
   runApp(MultiProvider(
     providers: [
-      ChangeNotifierProvider<ClashConfig>(
-        create: (_) => clashConfig,
-      ),
       ChangeNotifierProvider<Config>(
         create: (_) => config,
       ),
       ChangeNotifierProvider<AppFlowingState>(
         create: (_) => appFlowingState,
       ),
-      ChangeNotifierProxyProvider2<Config, ClashConfig, AppState>(
+      ChangeNotifierProxyProvider<Config, AppState>(
         create: (_) => appState,
-        update: (_, config, clashConfig, appState) {
-          appState?.mode = clashConfig.mode;
+        update: (_, config, appState) {
+          appState?.mode = config.patchClashConfig.mode;
           appState?.selectedMap = config.currentSelectedMap;
           return appState!;
         },
@@ -59,22 +54,15 @@ class Application extends StatefulWidget {
 
 class ApplicationState extends State<Application> {
   late SystemColorSchemes systemColorSchemes;
-  Timer? timer;
+  Timer? _autoUpdateGroupTaskTimer;
+  Timer? _autoUpdateProfilesTaskTimer;
 
   final _pageTransitionsTheme = const PageTransitionsTheme(
     builders: <TargetPlatform, PageTransitionsBuilder>{
-      TargetPlatform.android: SharedAxisPageTransitionsBuilder(
-        transitionType: SharedAxisTransitionType.horizontal,
-      ),
-      TargetPlatform.windows: SharedAxisPageTransitionsBuilder(
-        transitionType: SharedAxisTransitionType.horizontal,
-      ),
-      TargetPlatform.linux: SharedAxisPageTransitionsBuilder(
-        transitionType: SharedAxisTransitionType.horizontal,
-      ),
-      TargetPlatform.macOS: SharedAxisPageTransitionsBuilder(
-        transitionType: SharedAxisTransitionType.horizontal,
-      ),
+      TargetPlatform.android: CommonPageTransitionsBuilder(),
+      TargetPlatform.windows: CommonPageTransitionsBuilder(),
+      TargetPlatform.linux: CommonPageTransitionsBuilder(),
+      TargetPlatform.macOS: CommonPageTransitionsBuilder(),
     },
   );
 
@@ -96,7 +84,8 @@ class ApplicationState extends State<Application> {
   @override
   void initState() {
     super.initState();
-    _initTimer();
+    _autoUpdateGroupTask();
+    _autoUpdateProfilesTask();
     globalState.appController = AppController(context);
     globalState.measure = Measure.of(context);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
@@ -110,29 +99,29 @@ class ApplicationState extends State<Application> {
     });
   }
 
-  _initTimer() {
-    _cancelTimer();
-    timer = Timer.periodic(const Duration(milliseconds: 20000), (_) {
+  _autoUpdateGroupTask() {
+    _autoUpdateGroupTaskTimer = Timer(const Duration(milliseconds: 20000), () {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        globalState.appController.updateGroupDebounce();
+        globalState.appController.updateGroupsDebounce();
+        _autoUpdateGroupTask();
       });
     });
   }
 
-  _cancelTimer() {
-    if (timer != null) {
-      timer?.cancel();
-      timer = null;
-    }
+  _autoUpdateProfilesTask() {
+    _autoUpdateProfilesTaskTimer = Timer(const Duration(minutes: 20), () async {
+      await globalState.appController.autoUpdateProfiles();
+      _autoUpdateProfilesTask();
+    });
   }
 
-  _buildApp(Widget app) {
+  _buildPlatformWrap(Widget child) {
     if (system.isDesktop) {
       return WindowManager(
         child: TrayManager(
           child: HotKeyManager(
             child: ProxyManager(
-              child: app,
+              child: child,
             ),
           ),
         ),
@@ -140,7 +129,7 @@ class ApplicationState extends State<Application> {
     }
     return AndroidManager(
       child: TileManager(
-        child: app,
+        child: child,
       ),
     );
   }
@@ -153,6 +142,20 @@ class ApplicationState extends State<Application> {
     }
     return VpnManager(
       child: page,
+    );
+  }
+
+  _buildWrap(Widget child) {
+    return AppStateManager(
+      child: ClashManager(
+        child: ConnectivityManager(
+          onConnectivityChanged: () {
+            globalState.appController.updateLocalIp();
+            globalState.appController.addCheckIpNumDebounce();
+          },
+          child: child,
+        ),
+      ),
     );
   }
 
@@ -171,31 +174,31 @@ class ApplicationState extends State<Application> {
 
   @override
   Widget build(context) {
-    return _buildApp(
-      AppStateManager(
-        child: ClashManager(
-          child: Selector2<AppState, Config, ApplicationSelectorState>(
-            selector: (_, appState, config) => ApplicationSelectorState(
-              locale: config.appSetting.locale,
-              themeMode: config.themeProps.themeMode,
-              primaryColor: config.themeProps.primaryColor,
-              prueBlack: config.themeProps.prueBlack,
-              fontFamily: config.themeProps.fontFamily,
-            ),
-            builder: (_, state, child) {
-              return DynamicColorBuilder(
-                builder: (lightDynamic, darkDynamic) {
-                  _updateSystemColorSchemes(lightDynamic, darkDynamic);
-                  return MaterialApp(
-                    navigatorKey: globalState.navigatorKey,
-                    localizationsDelegates: const [
-                      AppLocalizations.delegate,
-                      GlobalMaterialLocalizations.delegate,
-                      GlobalCupertinoLocalizations.delegate,
-                      GlobalWidgetsLocalizations.delegate
-                    ],
-                    builder: (_, child) {
-                      return LayoutBuilder(
+    return _buildPlatformWrap(
+      _buildWrap(
+        Selector2<AppState, Config, ApplicationSelectorState>(
+          selector: (_, appState, config) => ApplicationSelectorState(
+            locale: config.appSetting.locale,
+            themeMode: config.themeProps.themeMode,
+            primaryColor: config.themeProps.primaryColor,
+            prueBlack: config.themeProps.prueBlack,
+            fontFamily: config.themeProps.fontFamily,
+          ),
+          builder: (_, state, child) {
+            return DynamicColorBuilder(
+              builder: (lightDynamic, darkDynamic) {
+                _updateSystemColorSchemes(lightDynamic, darkDynamic);
+                return MaterialApp(
+                  navigatorKey: globalState.navigatorKey,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate
+                  ],
+                  builder: (_, child) {
+                    return MessageManager(
+                      child: LayoutBuilder(
                         builder: (_, container) {
                           final appController = globalState.appController;
                           final maxWidth = container.maxWidth;
@@ -204,41 +207,40 @@ class ApplicationState extends State<Application> {
                           }
                           return _buildPage(child!);
                         },
-                      );
-                    },
-                    scrollBehavior: BaseScrollBehavior(),
-                    title: appName,
-                    locale: other.getLocaleForString(state.locale),
-                    supportedLocales:
-                        AppLocalizations.delegate.supportedLocales,
-                    themeMode: state.themeMode,
-                    theme: ThemeData(
-                      useMaterial3: true,
-                      fontFamily: state.fontFamily.value,
-                      pageTransitionsTheme: _pageTransitionsTheme,
-                      colorScheme: _getAppColorScheme(
-                        brightness: Brightness.light,
-                        systemColorSchemes: systemColorSchemes,
-                        primaryColor: state.primaryColor,
                       ),
+                    );
+                  },
+                  scrollBehavior: BaseScrollBehavior(),
+                  title: appName,
+                  locale: other.getLocaleForString(state.locale),
+                  supportedLocales: AppLocalizations.delegate.supportedLocales,
+                  themeMode: state.themeMode,
+                  theme: ThemeData(
+                    useMaterial3: true,
+                    fontFamily: state.fontFamily.value,
+                    pageTransitionsTheme: _pageTransitionsTheme,
+                    colorScheme: _getAppColorScheme(
+                      brightness: Brightness.light,
+                      systemColorSchemes: systemColorSchemes,
+                      primaryColor: state.primaryColor,
                     ),
-                    darkTheme: ThemeData(
-                      useMaterial3: true,
-                      fontFamily: state.fontFamily.value,
-                      pageTransitionsTheme: _pageTransitionsTheme,
-                      colorScheme: _getAppColorScheme(
-                        brightness: Brightness.dark,
-                        systemColorSchemes: systemColorSchemes,
-                        primaryColor: state.primaryColor,
-                      ).toPrueBlack(state.prueBlack),
-                    ),
-                    home: child,
-                  );
-                },
-              );
-            },
-            child: const HomePage(),
-          ),
+                  ),
+                  darkTheme: ThemeData(
+                    useMaterial3: true,
+                    fontFamily: state.fontFamily.value,
+                    pageTransitionsTheme: _pageTransitionsTheme,
+                    colorScheme: _getAppColorScheme(
+                      brightness: Brightness.dark,
+                      systemColorSchemes: systemColorSchemes,
+                      primaryColor: state.primaryColor,
+                    ).toPrueBlack(state.prueBlack),
+                  ),
+                  home: child,
+                );
+              },
+            );
+          },
+          child: const HomePage(),
         ),
       ),
     );
@@ -247,8 +249,9 @@ class ApplicationState extends State<Application> {
   @override
   Future<void> dispose() async {
     linkManager.destroy();
-    _cancelTimer();
-    await clashService?.destroy();
+    _autoUpdateGroupTaskTimer?.cancel();
+    _autoUpdateProfilesTaskTimer?.cancel();
+    await clashCore.destroy();
     await globalState.appController.savePreferences();
     await globalState.appController.handleExit();
     super.dispose();

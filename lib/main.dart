@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:ui';
 
-import 'package:fl_clash/clash/clash.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/plugins/tile.dart';
 import 'package:fl_clash/plugins/vpn.dart';
@@ -10,25 +14,28 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'application.dart';
+import 'clash/core.dart';
+import 'clash/lib.dart';
 import 'common/common.dart';
 import 'l10n/l10n.dart';
 import 'models/models.dart';
 
 Future<void> main() async {
+  globalState.isService = false;
   WidgetsFlutterBinding.ensureInitialized();
-  clashLib?.initMessage();
+  await clashCore.preload();
   globalState.packageInfo = await PackageInfo.fromPlatform();
   final version = await system.version;
   final config = await preferences.getConfig() ?? Config();
+  await globalState.migrateOldData(config);
   await AppLocalizations.load(
     other.getLocaleForString(config.appSetting.locale) ??
         WidgetsBinding.instance.platformDispatcher.locale,
   );
-  final clashConfig = await preferences.getClashConfig() ?? ClashConfig();
   await android?.init();
   await window?.init(config.windowProps, version);
   final appState = AppState(
-    mode: clashConfig.mode,
+    mode: config.patchClashConfig.mode,
     version: version,
     selectedMap: config.currentSelectedMap,
   );
@@ -41,7 +48,6 @@ Future<void> main() async {
     appState: appState,
     appFlowingState: appFlowingState,
     config: config,
-    clashConfig: clashConfig,
   );
   HttpOverrides.global = FlClashHttpOverrides();
   runAppWithPreferences(
@@ -49,136 +55,163 @@ Future<void> main() async {
     appState: appState,
     appFlowingState: appFlowingState,
     config: config,
-    clashConfig: clashConfig,
   );
 }
 
 @pragma('vm:entry-point')
-Future<void> vpnService() async {
+Future<void> _service(List<String> flags) async {
+  globalState.isService = true;
   WidgetsFlutterBinding.ensureInitialized();
-  globalState.isVpnService = true;
-  globalState.packageInfo = await PackageInfo.fromPlatform();
-  final version = await system.version;
+  final quickStart = flags.contains("quick");
+  final clashLibHandler = ClashLibHandler();
   final config = await preferences.getConfig() ?? Config();
-  final clashConfig = await preferences.getClashConfig() ?? ClashConfig();
   await AppLocalizations.load(
     other.getLocaleForString(config.appSetting.locale) ??
         WidgetsBinding.instance.platformDispatcher.locale,
   );
 
-  final appState = AppState(
-    mode: clashConfig.mode,
-    selectedMap: config.currentSelectedMap,
-    version: version,
-  );
-
-  await globalState.init(
-    appState: appState,
-    config: config,
-    clashConfig: clashConfig,
-  );
-
-  await app?.tip(appLocalizations.startVpn);
-
-  globalState
-      .updateClashConfig(
-    appState: appState,
-    clashConfig: clashConfig,
-    config: config,
-    isPatch: false,
-  )
-      .then(
-    (_) async {
-      await globalState.handleStart();
-
-      tile?.addListener(
-        TileListenerWithVpn(
-          onStop: () async {
-            await app?.tip(appLocalizations.stopVpn);
-            await globalState.handleStop();
-            clashCore.shutdown();
-            exit(0);
-          },
-        ),
-      );
-      globalState.updateTraffic(config: config);
-      globalState.updateFunctionLists = [
-        () {
-          globalState.updateTraffic(config: config);
-        }
-      ];
-    },
-  );
-
-  vpn?.setServiceMessageHandler(
-    ServiceMessageHandler(
-      onProtect: (Fd fd) async {
-        await vpn?.setProtect(fd.value);
-        clashLib?.setFdMap(fd.id);
-      },
-      onProcess: (ProcessData process) async {
-        final packageName = await vpn?.resolverProcess(process);
-        clashLib?.setProcessMap(
-          ProcessMapItem(
-            id: process.id,
-            value: packageName ?? "",
-          ),
-        );
-      },
-      onLoaded: (String groupName) {
-        final currentSelectedMap = config.currentSelectedMap;
-        final proxyName = currentSelectedMap[groupName];
-        if (proxyName == null) return;
-        globalState.changeProxy(
-          config: config,
-          groupName: groupName,
-          proxyName: proxyName,
-        );
+  tile?.addListener(
+    _TileListenerWithService(
+      onStop: () async {
+        await app?.tip(appLocalizations.stopVpn);
+        clashLibHandler.stopListener();
+        clashLibHandler.stopTun();
+        await vpn?.stop();
+        exit(0);
       },
     ),
   );
+
+  vpn?.handleGetStartForegroundParams = () {
+    final traffic = clashLibHandler.getTraffic();
+    return json.encode({
+      "title": clashLibHandler.getCurrentProfileName(),
+      "content": "$traffic"
+    });
+  };
+
+  vpn?.addListener(
+    _VpnListenerWithService(
+      onStarted: (int fd) {
+        commonPrint.log("vpn started fd: $fd");
+        final time = clashLibHandler.startTun(fd);
+        commonPrint.log("vpn start tun time: $time");
+      },
+      onDnsChanged: (String dns) {
+        clashLibHandler.updateDns(dns);
+      },
+    ),
+  );
+
+  final invokeReceiverPort = ReceivePort();
+
+  clashLibHandler.attachInvokePort(
+    invokeReceiverPort.sendPort.nativePort,
+  );
+
+  invokeReceiverPort.listen(
+    (message) async {
+      final invokeMessage = InvokeMessage.fromJson(json.decode(message));
+      switch (invokeMessage.type) {
+        case InvokeMessageType.protect:
+          final fd = Fd.fromJson(invokeMessage.data);
+          await vpn?.setProtect(fd.value);
+          clashLibHandler.setFdMap(fd.id);
+        case InvokeMessageType.process:
+          final process = ProcessData.fromJson(invokeMessage.data);
+          final processName = await vpn?.resolverProcess(process) ?? "";
+          clashLibHandler.setProcessMap(
+            ProcessMapItem(
+              id: process.id,
+              value: processName,
+            ),
+          );
+      }
+    },
+  );
+  if (!quickStart) {
+    _handleMainIpc(clashLibHandler);
+  } else {
+    commonPrint.log("quick start");
+    await ClashCore.initGeo();
+    globalState.packageInfo = await PackageInfo.fromPlatform();
+    app?.tip(appLocalizations.startVpn);
+    final homeDirPath = await appPath.homeDirPath;
+    clashLibHandler
+        .quickStart(
+      homeDirPath,
+      globalState.getUpdateConfigParams(config, false),
+      globalState.getCoreState(config),
+    )
+        .then(
+      (res) async {
+        if (res.isNotEmpty) {
+          await vpn?.stop();
+          exit(0);
+        }
+        await vpn?.start(
+          clashLibHandler.getAndroidVpnOptions(),
+        );
+        clashLibHandler.startListener();
+      },
+    );
+  }
+}
+
+_handleMainIpc(ClashLibHandler clashLibHandler) {
+  final sendPort = IsolateNameServer.lookupPortByName(mainIsolate);
+  if (sendPort == null) {
+    return;
+  }
+  final serviceReceiverPort = ReceivePort();
+  serviceReceiverPort.listen((message) async {
+    final res = await clashLibHandler.invokeAction(message);
+    sendPort.send(res);
+  });
+  sendPort.send(serviceReceiverPort.sendPort);
+  final messageReceiverPort = ReceivePort();
+  clashLibHandler.attachMessagePort(
+    messageReceiverPort.sendPort.nativePort,
+  );
+  messageReceiverPort.listen((message) {
+    sendPort.send(message);
+  });
 }
 
 @immutable
-class ServiceMessageHandler with ServiceMessageListener {
-  final Function(Fd fd) _onProtect;
-  final Function(ProcessData process) _onProcess;
-  final Function(String providerName) _onLoaded;
-
-  const ServiceMessageHandler({
-    required Function(Fd fd) onProtect,
-    required Function(ProcessData process) onProcess,
-    required Function(String providerName) onLoaded,
-  })  : _onProtect = onProtect,
-        _onProcess = onProcess,
-        _onLoaded = onLoaded;
-
-  @override
-  onProtect(Fd fd) {
-    _onProtect(fd);
-  }
-
-  @override
-  onProcess(ProcessData process) {
-    _onProcess(process);
-  }
-
-  @override
-  onLoaded(String providerName) {
-    _onLoaded(providerName);
-  }
-}
-
-@immutable
-class TileListenerWithVpn with TileListener {
+class _TileListenerWithService with TileListener {
   final Function() _onStop;
 
-  const TileListenerWithVpn({
+  const _TileListenerWithService({
     required Function() onStop,
   }) : _onStop = onStop;
 
   @override
   void onStop() {
     _onStop();
+  }
+}
+
+@immutable
+class _VpnListenerWithService with VpnListener {
+  final Function(int fd) _onStarted;
+  final Function(String dns) _onDnsChanged;
+
+  const _VpnListenerWithService({
+    required Function(int fd) onStarted,
+    required Function(String dns) onDnsChanged,
+  })  : _onStarted = onStarted,
+        _onDnsChanged = onDnsChanged;
+
+  @override
+  void onStarted(int fd) {
+    super.onStarted(fd);
+    _onStarted(fd);
+  }
+
+  @override
+  void onDnsChanged(String dns) {
+    super.onDnsChanged(dns);
+    _onDnsChanged(dns);
   }
 }

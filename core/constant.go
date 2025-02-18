@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/metacubex/mihomo/adapter/provider"
 	"github.com/metacubex/mihomo/config"
-	"github.com/metacubex/mihomo/constant"
 	"time"
 )
 
@@ -28,12 +28,8 @@ type ChangeProxyParams struct {
 
 type TestDelayParams struct {
 	ProxyName string `json:"proxy-name"`
+	TestUrl   string `json:"test-url"`
 	Timeout   int64  `json:"timeout"`
-}
-
-type ProcessMapItem struct {
-	Id    int64  `json:"id"`
-	Value string `json:"value"`
 }
 
 type ExternalProvider struct {
@@ -65,6 +61,8 @@ const (
 	closeConnectionMethod          Method = "closeConnection"
 	getExternalProvidersMethod     Method = "getExternalProviders"
 	getExternalProviderMethod      Method = "getExternalProvider"
+	getCountryCodeMethod           Method = "getCountryCode"
+	getMemoryMethod                Method = "getMemory"
 	updateGeoDataMethod            Method = "updateGeoData"
 	updateExternalProviderMethod   Method = "updateExternalProvider"
 	sideLoadExternalProviderMethod Method = "sideLoadExternalProvider"
@@ -72,19 +70,24 @@ const (
 	stopLogMethod                  Method = "stopLog"
 	startListenerMethod            Method = "startListener"
 	stopListenerMethod             Method = "stopListener"
+	startTunMethod                 Method = "startTun"
+	stopTunMethod                  Method = "stopTun"
+	updateDnsMethod                Method = "updateDns"
+	setProcessMapMethod            Method = "setProcessMap"
+	setFdMapMethod                 Method = "setFdMap"
+	setStateMethod                 Method = "setState"
+	getAndroidVpnOptionsMethod     Method = "getAndroidVpnOptions"
+	getRunTimeMethod               Method = "getRunTime"
+	getCurrentProfileNameMethod    Method = "getCurrentProfileName"
+	getProfileMethod               Method = "getProfile"
 )
 
 type Method string
 
-type Action struct {
-	Id     string      `json:"id"`
-	Method Method      `json:"method"`
-	Data   interface{} `json:"data"`
-}
-
 type MessageType string
 
 type Delay struct {
+	Url   string `json:"url"`
 	Name  string `json:"name"`
 	Value int32  `json:"value"`
 }
@@ -94,17 +97,31 @@ type Message struct {
 	Data interface{} `json:"data"`
 }
 
-type Process struct {
-	Id       int64              `json:"id"`
-	Metadata *constant.Metadata `json:"metadata"`
-}
-
 const (
 	LogMessage     MessageType = "log"
-	ProtectMessage MessageType = "protect"
 	DelayMessage   MessageType = "delay"
-	ProcessMessage MessageType = "process"
 	RequestMessage MessageType = "request"
-	StartedMessage MessageType = "started"
 	LoadedMessage  MessageType = "loaded"
 )
+
+func (message *Message) Json() (string, error) {
+	data, err := json.Marshal(message)
+	return string(data), err
+}
+
+type InvokeMessage struct {
+	Type InvokeType  `json:"type"`
+	Data interface{} `json:"data"`
+}
+
+type InvokeType string
+
+const (
+	ProtectInvoke InvokeType = "protect"
+	ProcessInvoke InvokeType = "process"
+)
+
+func (message *InvokeMessage) Json() string {
+	data, _ := json.Marshal(message)
+	return string(data)
+}

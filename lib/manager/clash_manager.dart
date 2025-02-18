@@ -1,4 +1,5 @@
 import 'package:fl_clash/clash/clash.dart';
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/state.dart';
@@ -20,30 +21,31 @@ class ClashManager extends StatefulWidget {
 }
 
 class _ClashContainerState extends State<ClashManager> with AppMessageListener {
-  Function? updateDelayDebounce;
-
   Widget _updateContainer(Widget child) {
-    return Selector2<Config, ClashConfig, ClashConfigState>(
-      selector: (_, config, clashConfig) => ClashConfigState(
-        overrideDns: config.overrideDns,
-        mixedPort: clashConfig.mixedPort,
-        allowLan: clashConfig.allowLan,
-        ipv6: clashConfig.ipv6,
-        logLevel: clashConfig.logLevel,
-        geodataLoader: clashConfig.geodataLoader,
-        externalController: clashConfig.externalController,
-        mode: clashConfig.mode,
-        findProcessMode: clashConfig.findProcessMode,
-        keepAliveInterval: clashConfig.keepAliveInterval,
-        unifiedDelay: clashConfig.unifiedDelay,
-        tcpConcurrent: clashConfig.tcpConcurrent,
-        tun: clashConfig.tun,
-        dns: clashConfig.dns,
-        hosts: clashConfig.hosts,
-        geoXUrl: clashConfig.geoXUrl,
-        rules: clashConfig.rules,
-        globalRealUa: clashConfig.globalRealUa,
-      ),
+    return Selector<Config, ClashConfigState>(
+      selector: (_, config) {
+        final clashConfig = config.patchClashConfig;
+        return ClashConfigState(
+          overrideDns: config.overrideDns,
+          mixedPort: config.patchClashConfig.mixedPort,
+          allowLan: clashConfig.allowLan,
+          ipv6: clashConfig.ipv6,
+          logLevel: clashConfig.logLevel,
+          geodataLoader: clashConfig.geodataLoader,
+          externalController: clashConfig.externalController,
+          mode: clashConfig.mode,
+          findProcessMode: clashConfig.findProcessMode,
+          keepAliveInterval: clashConfig.keepAliveInterval,
+          unifiedDelay: clashConfig.unifiedDelay,
+          tcpConcurrent: clashConfig.tcpConcurrent,
+          tun: clashConfig.tun,
+          dns: clashConfig.dns,
+          hosts: clashConfig.hosts,
+          geoXUrl: clashConfig.geoXUrl,
+          rules: clashConfig.rules,
+          globalUa: clashConfig.globalUa,
+        );
+      },
       shouldRebuild: (prev, next) {
         if (prev != next) {
           globalState.appController.updateClashConfigDebounce();
@@ -51,6 +53,19 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
         return prev != next;
       },
       builder: (__, state, child) {
+        return child!;
+      },
+      child: child,
+    );
+  }
+
+  Widget _updateCoreState(Widget child) {
+    return Selector<Config, CoreState>(
+      selector: (_, config) => globalState.getCoreState(
+        config,
+      ),
+      builder: (__, state, child) {
+        clashCore.setState(state);
         return child!;
       },
       child: child,
@@ -81,7 +96,9 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
   Widget build(BuildContext context) {
     return _changeProfileContainer(
       _updateContainer(
-        widget.child,
+        _updateCoreState(
+          widget.child,
+        ),
       ),
     );
   }
@@ -100,29 +117,25 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
 
   @override
   Future<void> onDelay(Delay delay) async {
+    super.onDelay(delay);
     final appController = globalState.appController;
     appController.setDelay(delay);
-    super.onDelay(delay);
-    updateDelayDebounce ??= debounce(() async {
-      await appController.updateGroupDebounce();
-      await appController.addCheckIpNumDebounce();
-    }, milliseconds: 5000);
-    updateDelayDebounce!();
+    debouncer.call(
+      DebounceTag.updateDelay,
+      () async {
+        await appController.updateGroupsDebounce();
+      },
+      duration: const Duration(milliseconds: 5000),
+    );
   }
 
   @override
   void onLog(Log log) {
     globalState.appController.appFlowingState.addLog(log);
     if (log.logLevel == LogLevel.error) {
-      globalState.appController.showSnackBar(log.payload ?? '');
+      globalState.showNotifier(log.payload ?? '');
     }
     super.onLog(log);
-  }
-
-  @override
-  void onStarted(String runTime) {
-    super.onStarted(runTime);
-    globalState.appController.applyProfileDebounce();
   }
 
   @override
@@ -139,7 +152,7 @@ class _ClashContainerState extends State<ClashManager> with AppMessageListener {
         providerName,
       ),
     );
-    await appController.updateGroupDebounce();
+    await appController.updateGroupsDebounce();
     super.onLoaded(providerName);
   }
 }

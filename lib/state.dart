@@ -5,7 +5,6 @@ import 'package:animations/animations.dart';
 import 'package:fl_clash/clash/clash.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/service.dart';
-import 'package:fl_clash/plugins/vpn.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -15,64 +14,73 @@ import 'common/common.dart';
 import 'controller.dart';
 import 'models/models.dart';
 
+typedef UpdateTasks = List<FutureOr Function()>;
+
 class GlobalState {
+  bool isService = false;
   Timer? timer;
   Timer? groupsUpdateTimer;
-  var isVpnService = false;
   late PackageInfo packageInfo;
   Function? updateCurrentDelayDebounce;
   PageController? pageController;
   late Measure measure;
   DateTime? startTime;
+  UpdateTasks tasks = [];
+  final safeMessageOffsetNotifier = ValueNotifier(Offset.zero);
   final navigatorKey = GlobalKey<NavigatorState>();
   late AppController appController;
   GlobalKey<CommonScaffoldState> homeScaffoldKey = GlobalKey();
-  List<Function> updateFunctionLists = [];
   bool lastTunEnable = false;
   int? lastProfileModified;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
-  startListenUpdate() {
+  startUpdateTasks([UpdateTasks? tasks]) async {
     if (timer != null && timer!.isActive == true) return;
-    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      for (final function in updateFunctionLists) {
-        function();
-      }
+    if (tasks != null) {
+      this.tasks = tasks;
+    }
+    await executorUpdateTask();
+    timer = Timer(const Duration(seconds: 1), () async {
+      startUpdateTasks();
     });
   }
 
-  stopListenUpdate() {
+  executorUpdateTask() async {
+    for (final task in tasks) {
+      await task();
+    }
+    timer = null;
+  }
+
+  stopUpdateTasks() {
     if (timer == null || timer?.isActive == false) return;
     timer?.cancel();
+    timer = null;
   }
 
   Future<void> initCore({
     required AppState appState,
-    required ClashConfig clashConfig,
     required Config config,
   }) async {
     await globalState.init(
       appState: appState,
       config: config,
-      clashConfig: clashConfig,
     );
     await applyProfile(
       appState: appState,
       config: config,
-      clashConfig: clashConfig,
     );
   }
 
   Future<void> updateClashConfig({
     required AppState appState,
-    required ClashConfig clashConfig,
     required Config config,
     bool isPatch = true,
   }) async {
     await config.currentProfile?.checkAndUpdate();
-    final useClashConfig = clashConfig.copyWith();
-    if (clashConfig.tun.enable != lastTunEnable &&
+    bool enableTun = config.patchClashConfig.tun.enable;
+    if (enableTun != lastTunEnable &&
         lastTunEnable == false &&
         !Platform.isAndroid) {
       final code = await system.authorizeCore();
@@ -80,17 +88,14 @@ class GlobalState {
         case AuthorizeCode.none:
           break;
         case AuthorizeCode.success:
-          lastTunEnable = useClashConfig.tun.enable;
+          lastTunEnable = enableTun;
           await restartCore(
             appState: appState,
-            clashConfig: clashConfig,
             config: config,
           );
           return;
         case AuthorizeCode.error:
-          useClashConfig.tun = useClashConfig.tun.copyWith(
-            enable: false,
-          );
+          enableTun = false;
       }
     }
     if (config.appSetting.openLogs) {
@@ -98,74 +103,57 @@ class GlobalState {
     } else {
       clashCore.stopLog();
     }
-    final res = await clashCore.updateConfig(
-      UpdateConfigParams(
-        profileId: config.currentProfileId ?? "",
-        config: useClashConfig,
-        params: ConfigExtendedParams(
-          isPatch: isPatch,
-          isCompatible: true,
-          selectedMap: config.currentSelectedMap,
-          overrideDns: config.overrideDns,
-          testUrl: config.appSetting.testUrl,
-        ),
-      ),
-    );
+    final res = await clashCore.updateConfig(getUpdateConfigParams(
+      config,
+      isPatch,
+    ));
     if (res.isNotEmpty) throw res;
-    lastTunEnable = useClashConfig.tun.enable;
+    lastTunEnable = enableTun;
     lastProfileModified = await config.getCurrentProfile()?.profileLastModified;
   }
 
-  handleStart() async {
-    await clashCore.startListener();
-    if (globalState.isVpnService) {
-      await vpn?.startVpn();
-      startListenUpdate();
-      return;
-    }
+  handleStart([UpdateTasks? tasks]) async {
     startTime ??= DateTime.now();
-    await service?.init();
-    startListenUpdate();
+    await clashCore.startListener();
+    await service?.startVpn();
+    startUpdateTasks(tasks);
   }
 
   restartCore({
     required AppState appState,
-    required ClashConfig clashConfig,
     required Config config,
     bool isPatch = true,
   }) async {
-    await clashService?.startCore();
+    await clashService?.reStart();
     await initCore(
       appState: appState,
-      clashConfig: clashConfig,
       config: config,
     );
+
     if (isStart) {
       await handleStart();
     }
   }
 
-  updateStartTime() {
-    startTime = clashLib?.getRunTime();
+  Future updateStartTime() async {
+    startTime = await clashLib?.getRunTime();
   }
 
   Future handleStop() async {
     startTime = null;
     await clashCore.stopListener();
-    clashLib?.stopTun();
-    await service?.destroy();
-    stopListenUpdate();
+    await clashLib?.stopTun();
+    await service?.stopVpn();
+    stopUpdateTasks();
   }
 
   Future applyProfile({
     required AppState appState,
     required Config config,
-    required ClashConfig clashConfig,
   }) async {
-    clashCore.requestGc();
+    await clashCore.requestGc();
     await updateClashConfig(
       appState: appState,
-      clashConfig: clashConfig,
       config: config,
       isPatch: false,
     );
@@ -177,31 +165,41 @@ class GlobalState {
     appState.providers = await clashCore.getExternalProviders();
   }
 
-  init({
+  CoreState getCoreState(Config config) {
+    return CoreState(
+      vpnProps: config.vpnProps,
+      onlyStatisticsProxy: config.appSetting.onlyStatisticsProxy,
+      currentProfileName:
+          config.currentProfile?.label ?? config.currentProfile?.id ?? "",
+    );
+  }
+
+  getUpdateConfigParams(Config config, bool isPatch) {
+    final patchClashConfig = config.patchClashConfig;
+    return UpdateConfigParams(
+      profileId: config.currentProfileId ?? "",
+      config: patchClashConfig.copyWith(
+        globalUa: patchClashConfig.globalUa ?? packageInfo.ua,
+      ),
+      params: ConfigExtendedParams(
+        isPatch: isPatch,
+        selectedMap: config.currentSelectedMap,
+        overrideDns: config.overrideDns,
+        testUrl: config.appSetting.testUrl,
+      ),
+    );
+  }
+
+  Future<void> init({
     required AppState appState,
     required Config config,
-    required ClashConfig clashConfig,
   }) async {
-    appState.isInit = await clashCore.isInit;
-    if (!appState.isInit) {
-      appState.isInit = await clashCore.init(
-        config: config,
-        clashConfig: clashConfig,
+    final isInit = await clashCore.isInit;
+    if (!isInit) {
+      await clashCore.setState(
+        getCoreState(config),
       );
-      clashLib?.setState(
-        CoreState(
-          enable: config.vpnProps.enable,
-          accessControl: config.isAccessControl ? config.accessControl : null,
-          ipv6: config.vpnProps.ipv6,
-          allowBypass: config.vpnProps.allowBypass,
-          systemProxy: config.vpnProps.systemProxy,
-          onlyProxy: config.appSetting.onlyProxy,
-          bypassDomain: config.networkProps.bypassDomain,
-          routeAddress: clashConfig.routeAddress,
-          currentProfileName:
-              config.currentProfile?.label ?? config.currentProfileId ?? "",
-        ),
-      );
+      await clashCore.init();
     }
   }
 
@@ -209,13 +207,12 @@ class GlobalState {
     appState.groups = await clashCore.getProxiesGroups();
   }
 
-  showMessage({
+  Future<bool?> showMessage<bool>({
     required String title,
     required InlineSpan message,
-    Function()? onTab,
     String? confirmText,
-  }) {
-    showCommonDialog(
+  }) async {
+    return await showCommonDialog<bool>(
       child: Builder(
         builder: (context) {
           return AlertDialog(
@@ -237,10 +234,15 @@ class GlobalState {
             ),
             actions: [
               TextButton(
-                onPressed: onTab ??
-                    () {
-                      Navigator.of(context).pop();
-                    },
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: Text(appLocalizations.cancel),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
                 child: Text(confirmText ?? appLocalizations.confirm),
               )
             ],
@@ -285,80 +287,63 @@ class GlobalState {
     required Config config,
     AppFlowingState? appFlowingState,
   }) async {
-    final onlyProxy = config.appSetting.onlyProxy;
-    final traffic = await clashCore.getTraffic(onlyProxy);
-    if (Platform.isAndroid && isVpnService == true) {
-      vpn?.startForeground(
-        title: clashLib?.getCurrentProfileName() ?? "",
-        content: "$traffic",
-      );
-    } else {
-      if (appFlowingState != null) {
-        appFlowingState.addTraffic(traffic);
-        appFlowingState.totalTraffic =
-            await clashCore.getTotalTraffic(onlyProxy);
-      }
+    final traffic = await clashCore.getTraffic();
+    if (appFlowingState != null) {
+      appFlowingState.addTraffic(traffic);
+      tray.updateTrayTitle(traffic);
+      appFlowingState.totalTraffic = await clashCore.getTotalTraffic();
     }
-  }
-
-  showSnackBar(
-    BuildContext context, {
-    required String message,
-    SnackBarAction? action,
-  }) {
-    final width = context.viewWidth;
-    EdgeInsets margin;
-    if (width < 600) {
-      margin = const EdgeInsets.only(
-        bottom: 16,
-        right: 16,
-        left: 16,
-      );
-    } else {
-      margin = EdgeInsets.only(
-        bottom: 16,
-        left: 16,
-        right: width - 316,
-      );
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        action: action,
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(milliseconds: 1500),
-        margin: margin,
-      ),
-    );
   }
 
   Future<T?> safeRun<T>(
     FutureOr<T> Function() futureFunction, {
     String? title,
+    bool silence = true,
   }) async {
     try {
       final res = await futureFunction();
       return res;
     } catch (e) {
-      showMessage(
-        title: title ?? appLocalizations.tip,
-        message: TextSpan(
-          text: e.toString(),
-        ),
-      );
+      if (silence) {
+        showNotifier(e.toString());
+      } else {
+        showMessage(
+          title: title ?? appLocalizations.tip,
+          message: TextSpan(
+            text: e.toString(),
+          ),
+        );
+      }
       return null;
     }
   }
 
-  openUrl(String url) {
-    showMessage(
+  showNotifier(String text) {
+    if (text.isEmpty) {
+      return;
+    }
+    navigatorKey.currentContext?.showNotifier(text);
+  }
+
+  openUrl(String url) async {
+    final res = await showMessage(
       message: TextSpan(text: url),
       title: appLocalizations.externalLink,
       confirmText: appLocalizations.go,
-      onTab: () {
-        launchUrl(Uri.parse(url));
-      },
     );
+    if (res != true) {
+      return;
+    }
+    launchUrl(Uri.parse(url));
+  }
+
+  Future<void> migrateOldData(Config config) async {
+    final clashConfig = await preferences.getClashConfig();
+    if (clashConfig != null) {
+      config.patchClashConfig = clashConfig;
+      preferences.clearClashConfig();
+      preferences.saveConfig(config);
+    }
   }
 }
 

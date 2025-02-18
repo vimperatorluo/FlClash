@@ -22,60 +22,61 @@ class AppController {
   late AppState appState;
   late AppFlowingState appFlowingState;
   late Config config;
-  late ClashConfig clashConfig;
-  late Function updateClashConfigDebounce;
-  late Function updateGroupDebounce;
-  late Function addCheckIpNumDebounce;
-  late Function applyProfileDebounce;
-  late Function savePreferencesDebounce;
-  late Function changeProxyDebounce;
 
   AppController(this.context) {
     appState = context.read<AppState>();
     config = context.read<Config>();
-    clashConfig = context.read<ClashConfig>();
     appFlowingState = context.read<AppFlowingState>();
-    updateClashConfigDebounce = debounce<Function()>(() async {
-      await updateClashConfig();
+  }
+
+  updateClashConfigDebounce() {
+    debouncer.call(DebounceTag.updateClashConfig, updateClashConfig);
+  }
+
+  updateGroupsDebounce() {
+    debouncer.call(DebounceTag.updateGroups, updateGroups);
+  }
+
+  addCheckIpNumDebounce() {
+    debouncer.call(DebounceTag.addCheckIpNum, () {
+      appState.checkIpNum++;
     });
-    savePreferencesDebounce = debounce<Function()>(() async {
-      await savePreferences();
+  }
+
+  applyProfileDebounce() {
+    debouncer.call(DebounceTag.addCheckIpNum, () {
+      applyProfile(isPrue: true);
     });
-    applyProfileDebounce = debounce<Function()>(() async {
-      await applyProfile(isPrue: true);
-    });
-    changeProxyDebounce = debounce((String groupName, String proxyName) async {
+  }
+
+  savePreferencesDebounce() {
+    debouncer.call(DebounceTag.savePreferences, savePreferences);
+  }
+
+  changeProxyDebounce(String groupName, String proxyName) {
+    debouncer.call(DebounceTag.changeProxy,
+        (String groupName, String proxyName) async {
       await changeProxy(
         groupName: groupName,
         proxyName: proxyName,
       );
       await updateGroups();
-    });
-    addCheckIpNumDebounce = debounce(() {
-      appState.checkIpNum++;
-    });
-    updateGroupDebounce = debounce(() async {
-      await updateGroups();
-    });
+    }, args: [groupName, proxyName]);
   }
 
   restartCore() async {
     await globalState.restartCore(
       appState: appState,
-      clashConfig: clashConfig,
       config: config,
     );
   }
 
   updateStatus(bool isStart) async {
     if (isStart) {
-      await globalState.handleStart();
-      updateRunTime();
-      updateTraffic();
-      globalState.updateFunctionLists = [
+      await globalState.handleStart([
         updateRunTime,
         updateTraffic,
-      ];
+      ]);
       final currentLastModified =
           await config.getCurrentProfile()?.profileLastModified;
       if (currentLastModified == null ||
@@ -94,9 +95,7 @@ class AppController {
       appFlowingState.traffics = [];
       appFlowingState.totalTraffic = Traffic();
       appFlowingState.runTime = null;
-      await Future.delayed(
-        Duration(milliseconds: 300),
-      );
+      tray.updateTrayTitle(null);
       addCheckIpNumDebounce();
     }
   }
@@ -139,8 +138,14 @@ class AppController {
     }
   }
 
-  updateProviders() {
-    globalState.updateProviders(appState);
+  updateProviders() async {
+    await globalState.updateProviders(appState);
+  }
+
+  updateLocalIp() async {
+    appFlowingState.localIp = null;
+    await Future.delayed(commonDuration);
+    appFlowingState.localIp = await other.getLocalIpAddress();
   }
 
   Future<void> updateProfile(Profile profile) async {
@@ -148,6 +153,16 @@ class AppController {
     config.setProfile(
       newProfile.copyWith(isUpdating: false),
     );
+    if (profile.id == config.currentProfile?.id) {
+      applyProfileDebounce();
+    }
+  }
+
+  setProfile(Profile profile) {
+    config.setProfile(profile);
+    if (profile.id == config.currentProfile?.id) {
+      applyProfileDebounce();
+    }
   }
 
   Future<void> updateClashConfig({bool isPatch = true}) async {
@@ -156,7 +171,6 @@ class AppController {
     await commonScaffoldState?.loadingRun(() async {
       await globalState.updateClashConfig(
         appState: appState,
-        clashConfig: clashConfig,
         config: config,
         isPatch: isPatch,
       );
@@ -168,7 +182,6 @@ class AppController {
       await globalState.applyProfile(
         appState: appState,
         config: config,
-        clashConfig: clashConfig,
       );
     } else {
       final commonScaffoldState = globalState.homeScaffoldKey.currentState;
@@ -177,7 +190,6 @@ class AppController {
         await globalState.applyProfile(
           appState: appState,
           config: config,
-          clashConfig: clashConfig,
         );
       });
     }
@@ -231,9 +243,9 @@ class AppController {
   }
 
   savePreferences() async {
-    debugPrint("[APP] savePreferences");
+    commonPrint.log("savePreferences");
     await preferences.saveConfig(config);
-    await preferences.saveClashConfig(clashConfig);
+    // await preferences.saveClashConfig(clashConfig);
   }
 
   changeProxy({
@@ -266,8 +278,9 @@ class AppController {
       await clashService?.destroy();
       await proxy?.stopProxy();
       await savePreferences();
-    } catch (_) {}
-    system.exit();
+    } finally {
+      system.exit();
+    }
   }
 
   autoCheckUpdate() async {
@@ -285,7 +298,7 @@ class AppController {
       final body = data['body'];
       final submits = other.parseReleaseBody(body);
       final textTheme = context.textTheme;
-      globalState.showMessage(
+      final res = await globalState.showMessage(
         title: appLocalizations.discoverNewVersion,
         message: TextSpan(
           text: "$tagName \n",
@@ -302,12 +315,13 @@ class AppController {
               ),
           ],
         ),
-        onTab: () {
-          launchUrl(
-            Uri.parse("https://github.com/$repository/releases/latest"),
-          );
-        },
         confirmText: appLocalizations.goDownload,
+      );
+      if (res != true) {
+        return;
+      }
+      launchUrl(
+        Uri.parse("https://github.com/$repository/releases/latest"),
       );
     } else if (handleError) {
       globalState.showMessage(
@@ -319,32 +333,55 @@ class AppController {
     }
   }
 
+  _handlePreference() async {
+    if (await preferences.isInit) {
+      return;
+    }
+    final res = await globalState.showMessage(
+      title: appLocalizations.tip,
+      message: TextSpan(text: appLocalizations.cacheCorrupt),
+    );
+    if (res) {
+      final file = File(await appPath.sharedPreferencesPath);
+      final isExists = await file.exists();
+      if (isExists) {
+        await file.delete();
+      }
+    }
+    await handleExit();
+  }
+
   init() async {
-    final isDisclaimerAccepted = await handlerDisclaimer();
-    if (!isDisclaimerAccepted) {
-      handleExit();
-    }
-    if (!config.appSetting.silentLaunch) {
-      window?.show();
-    }
+    await _handlePreference();
+    await _handlerDisclaimer();
     await globalState.initCore(
       appState: appState,
-      clashConfig: clashConfig,
       config: config,
     );
     await _initStatus();
+    autoLaunch?.updateStatus(
+      config.appSetting.autoLaunch,
+    );
     autoUpdateProfiles();
     autoCheckUpdate();
+    if (!config.appSetting.silentLaunch) {
+      window?.show();
+    } else {
+      window?.hide();
+    }
+    appState.isInit = true;
   }
 
   _initStatus() async {
     if (Platform.isAndroid) {
-      globalState.updateStartTime();
+      await globalState.updateStartTime();
     }
-    if (globalState.isStart) {
-      await updateStatus(true);
-    } else {
-      await updateStatus(config.appSetting.autoRun);
+    final status =
+        globalState.isStart == true ? true : config.appSetting.autoRun;
+
+    await updateStatus(status);
+    if (!status) {
+      addCheckIpNumDebounce();
     }
   }
 
@@ -352,7 +389,10 @@ class AppController {
     appState.setDelay(delay);
   }
 
-  toPage(int index, {bool hasAnimate = false}) {
+  toPage(
+    int index, {
+    bool hasAnimate = false,
+  }) {
     if (index > appState.currentNavigationItems.length - 1) {
       return;
     }
@@ -379,8 +419,8 @@ class AppController {
 
   initLink() {
     linkManager.initAppLinksListen(
-      (url) {
-        globalState.showMessage(
+      (url) async {
+        final res = await globalState.showMessage(
           title: "${appLocalizations.add}${appLocalizations.profile}",
           message: TextSpan(
             children: [
@@ -398,16 +438,14 @@ class AppController {
                       "${appLocalizations.create}${appLocalizations.profile}"),
             ],
           ),
-          onTab: () {
-            addProfileFormURL(url);
-          },
         );
+
+        if (res != true) {
+          return;
+        }
+        addProfileFormURL(url);
       },
     );
-  }
-
-  showSnackBar(String message) {
-    globalState.showSnackBar(context, message: message);
   }
 
   Future<bool> showDisclaimer() async {
@@ -446,11 +484,15 @@ class AppController {
         false;
   }
 
-  Future<bool> handlerDisclaimer() async {
+  _handlerDisclaimer() async {
     if (config.appSetting.disclaimerAccepted) {
-      return true;
+      return;
     }
-    return showDisclaimer();
+    final isDisclaimerAccepted = await showDisclaimer();
+    if (!isDisclaimerAccepted) {
+      await handleExit();
+    }
+    return;
   }
 
   addProfileFormURL(String url) async {
@@ -508,6 +550,18 @@ class AppController {
     });
   }
 
+  int? getDelay(String proxyName, [String? url]) {
+    final currentDelayMap = appState.delayMap[getRealTestUrl(url)];
+    return currentDelayMap?[appState.getRealProxyName(proxyName)];
+  }
+
+  String getRealTestUrl(String? url) {
+    if (url == null || url.isEmpty) {
+      return config.appSetting.testUrl;
+    }
+    return url;
+  }
+
   List<Proxy> _sortOfName(List<Proxy> proxies) {
     return List.of(proxies)
       ..sort(
@@ -518,12 +572,12 @@ class AppController {
       );
   }
 
-  List<Proxy> _sortOfDelay(List<Proxy> proxies) {
-    return proxies = List.of(proxies)
+  List<Proxy> _sortOfDelay(String url, List<Proxy> proxies) {
+    return List.of(proxies)
       ..sort(
         (a, b) {
-          final aDelay = appState.getDelay(a.name);
-          final bDelay = appState.getDelay(b.name);
+          final aDelay = getDelay(a.name, url);
+          final bDelay = getDelay(b.name, url);
           if (aDelay == null && bDelay == null) {
             return 0;
           }
@@ -538,10 +592,10 @@ class AppController {
       );
   }
 
-  List<Proxy> getSortProxies(List<Proxy> proxies) {
+  List<Proxy> getSortProxies(List<Proxy> proxies, [String? url]) {
     return switch (config.proxiesStyle.sortType) {
       ProxiesSortType.none => proxies,
-      ProxiesSortType.delay => _sortOfDelay(proxies),
+      ProxiesSortType.delay => _sortOfDelay(getRealTestUrl(url), proxies),
       ProxiesSortType.name => _sortOfName(proxies),
     };
   }
@@ -566,9 +620,13 @@ class AppController {
     });
   }
 
+  bool get isMobileView {
+    return appState.viewMode == ViewMode.mobile;
+  }
+
   updateTun() {
-    clashConfig.tun = clashConfig.tun.copyWith(
-      enable: !clashConfig.tun.enable,
+    config.patchClashConfig = config.patchClashConfig.copyWith.tun(
+      enable: !config.patchClashConfig.tun.enable,
     );
   }
 
@@ -583,7 +641,9 @@ class AppController {
   }
 
   changeMode(Mode mode) {
-    clashConfig.mode = mode;
+    config.patchClashConfig = config.patchClashConfig.copyWith(
+      mode: mode,
+    );
     if (mode == Mode.global) {
       config.updateCurrentGroupName(GroupName.GLOBAL.name);
     }
@@ -606,12 +666,14 @@ class AppController {
   }
 
   updateMode() {
-    final index = Mode.values.indexWhere((item) => item == clashConfig.mode);
+    final index = Mode.values.indexWhere((item) => item == config.patchClashConfig.mode);
     if (index == -1) {
       return;
     }
     final nextIndex = index + 1 > Mode.values.length - 1 ? 0 : index + 1;
-    clashConfig.mode = Mode.values[nextIndex];
+    config.patchClashConfig = config.patchClashConfig.copyWith(
+      mode: Mode.values[nextIndex],
+    );
   }
 
   Future<bool> exportLogs() async {
@@ -630,14 +692,12 @@ class AppController {
   }
 
   Future<List<int>> backupData() async {
-    final homeDirPath = await appPath.getHomeDirPath();
-    final profilesPath = await appPath.getProfilesPath();
+    final homeDirPath = await appPath.homeDirPath;
+    final profilesPath = await appPath.profilesPath;
     final configJson = config.toJson();
-    final clashConfigJson = clashConfig.toJson();
     return Isolate.run<List<int>>(() async {
       final archive = Archive();
       archive.add("config.json", configJson);
-      archive.add("clashConfig.json", clashConfigJson);
       await archive.addDirectoryToArchive(profilesPath, homeDirPath);
       final zipEncoder = ZipEncoder();
       return zipEncoder.encode(archive) ?? [];
@@ -649,7 +709,6 @@ class AppController {
       appState: appState,
       appFlowingState: appFlowingState,
       config: config,
-      clashConfig: clashConfig,
       focus: focus,
     );
   }
@@ -662,26 +721,18 @@ class AppController {
       final zipDecoder = ZipDecoder();
       return zipDecoder.decodeBytes(data);
     });
-    final homeDirPath = await appPath.getHomeDirPath();
+    final homeDirPath = await appPath.homeDirPath;
     final configs =
         archive.files.where((item) => item.name.endsWith(".json")).toList();
     final profiles =
         archive.files.where((item) => !item.name.endsWith(".json"));
     final configIndex =
         configs.indexWhere((config) => config.name == "config.json");
-    final clashConfigIndex =
-        configs.indexWhere((config) => config.name == "clashConfig.json");
-    if (configIndex == -1 || clashConfigIndex == -1) throw "invalid backup.zip";
+    if (configIndex == -1) throw "invalid backup.zip";
     final configFile = configs[configIndex];
-    final clashConfigFile = configs[clashConfigIndex];
     final tempConfig = Config.fromJson(
       json.decode(
         utf8.decode(configFile.content),
-      ),
-    );
-    final tempClashConfig = ClashConfig.fromJson(
-      json.decode(
-        utf8.decode(clashConfigFile.content),
       ),
     );
     for (final profile in profiles) {
@@ -690,11 +741,19 @@ class AppController {
       await file.create(recursive: true);
       await file.writeAsBytes(profile.content);
     }
-    if (recoveryOption == RecoveryOption.onlyProfiles) {
-      config.update(tempConfig, RecoveryOption.onlyProfiles);
-    } else {
-      config.update(tempConfig, RecoveryOption.all);
-      clashConfig.update(tempClashConfig);
+    config.update(tempConfig, recoveryOption);
+    final clashConfigIndex =
+        configs.indexWhere((config) => config.name == "clashConfig.json");
+    if (clashConfigIndex == -1) {
+      return;
     }
+    final clashConfigFile = configs[clashConfigIndex];
+    config.patchClashConfig = ClashConfig.fromJson(
+      json.decode(
+        utf8.decode(
+          clashConfigFile.content,
+        ),
+      ),
+    );
   }
 }
